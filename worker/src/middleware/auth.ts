@@ -1,4 +1,4 @@
-import { CallerContext, Env, ApiKeyRecord, ErrorResponse } from '../types';
+import { CallerContext, Env, ApiKeyRecord } from '../types';
 import { IRequest } from 'itty-router';
 
 async function hashKey(key: string): Promise<string> {
