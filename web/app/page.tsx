@@ -6,7 +6,7 @@ import { submitScan, ApiError } from "@/lib/api";
 import ScanForm from "@/components/ScanForm";
 import ScanResults from "@/components/ScanResults";
 import LoadingState from "@/components/LoadingState";
-import { Radio, Clock, AlertTriangle } from "lucide-react";
+import { Radio, Clock, AlertTriangle, Github } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -66,11 +66,21 @@ export default function Home() {
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-[var(--accent)] bg-[var(--accent-subtle)] px-3 py-1 rounded-full mb-4">
             A2P 10DLC Pre-Scanner
           </span>
-          <div className="flex items-center gap-3 mb-3">
-            <Radio size={28} className="text-[var(--accent)]" />
-            <h1 className="text-4xl font-bold tracking-tight text-stone-900">
-              A2PCheck
-            </h1>
+          <div className="flex items-center justify-between w-full mb-3">
+            <div className="flex items-center gap-3">
+              <Radio size={28} className="text-[var(--accent)]" />
+              <h1 className="text-4xl font-bold tracking-tight text-stone-900">
+                A2PCheck
+              </h1>
+            </div>
+            <a
+              href="https://github.com/mogilventures/A2PCheck"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              <Github size={22} />
+            </a>
           </div>
           <p className="text-stone-500 text-base max-w-xl">
             Pre-scan your A2P 10DLC campaign registration before submitting.
