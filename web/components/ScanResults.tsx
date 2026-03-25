@@ -26,7 +26,7 @@ export default function ScanResults({ data }: { data: ScanResponse }) {
         </div>
       </div>
 
-      <div className="text-xs text-stone-400 border-t border-stone-200 pt-4 space-y-1">
+      <div className="text-xs text-stone-400 border-t border-stone-200 dark:border-stone-700 pt-4 space-y-1">
         <p>
           Scan ID: {data.scanId} | Duration: {data.metadata.scanDurationMs}ms |
           Rules: {data.rulesVersion}
@@ -50,7 +50,7 @@ export default function ScanResults({ data }: { data: ScanResponse }) {
           className="flex items-center gap-2 text-sm text-stone-500 hover:text-stone-700 transition-colors"
         >
           <ArrowUp size={14} />
-          Scan Again
+          Back to top
         </button>
       </div>
     </div>

@@ -24,8 +24,8 @@ const USE_CASES: { value: string; label: string }[] = [
 ];
 
 const inputClass =
-  "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-colors";
-const labelClass = "block text-sm font-medium text-stone-700 mb-1";
+  "w-full rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-stone-800 dark:text-stone-200 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40 focus:border-[var(--accent)] transition-colors";
+const labelClass = "block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1";
 const errorClass = "text-xs text-red-600 mt-1";
 
 function FormSection({
@@ -42,12 +42,12 @@ function FormSection({
   last?: boolean;
 }) {
   return (
-    <section className={last ? "" : "pb-10 border-b border-stone-200"}>
+    <section className={last ? "" : "pb-10 border-b border-stone-200 dark:border-stone-700"}>
       <div className="mb-4">
         <span className="text-xs font-semibold tracking-widest text-[var(--accent)] mb-1 block">
           {number}
         </span>
-        <h2 className="text-xl font-semibold tracking-tight text-stone-800">
+        <h2 className="text-xl font-semibold tracking-tight text-stone-800 dark:text-stone-200">
           {title}
         </h2>
         {description && (
@@ -377,7 +377,7 @@ export default function ScanForm({ onSubmit, loading }: Props) {
             <label
               key={id}
               htmlFor={id}
-              className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer"
+              className="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-300 cursor-pointer"
             >
               <input
                 id={id}

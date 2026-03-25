@@ -59,17 +59,17 @@ export default function Home() {
   }
 
   return (
-    <main className="flex-1">
+    <main id="main-content" className="flex-1">
       <div className="max-w-3xl mx-auto px-4 py-12">
         {/* Hero */}
-        <div className="mb-12 pb-8 border-b border-stone-200">
+        <div className="mb-12 pb-8 border-b border-stone-200 dark:border-stone-700">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest uppercase text-[var(--accent)] bg-[var(--accent-subtle)] px-3 py-1 rounded-full mb-4">
             A2P 10DLC Pre-Scanner
           </span>
           <div className="flex items-center justify-between w-full mb-3">
             <div className="flex items-center gap-3">
               <Radio size={28} className="text-[var(--accent)]" />
-              <h1 className="text-4xl font-bold tracking-tight text-stone-900">
+              <h1 className="text-4xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
                 A2PCheck
               </h1>
             </div>
@@ -77,24 +77,25 @@ export default function Home() {
               href="https://github.com/mogilventures/A2PCheck"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-stone-400 hover:text-stone-600 transition-colors"
+              aria-label="View source on GitHub"
+              className="text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300 transition-colors"
             >
               <Github size={22} />
             </a>
           </div>
-          <p className="text-stone-500 text-base max-w-xl">
+          <p className="text-stone-500 dark:text-stone-400 text-base max-w-xl">
             Pre-scan your A2P 10DLC campaign registration before submitting.
             Catch common rejection patterns and get actionable fixes.
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 shadow-sm">
+        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl p-6 sm:p-10 shadow-sm">
           <ScanForm onSubmit={handleSubmit} loading={loading} />
         </div>
 
         {/* API Access CTA */}
-        <p className="mt-4 text-center text-sm text-stone-500">
+        <p className="mt-4 text-center text-sm text-stone-500 dark:text-stone-400">
           Need to integrate into your workflow?{" "}
           <Link href="/api-docs" className="text-blue-600 hover:underline">
             Contact us for API access
@@ -115,8 +116,8 @@ export default function Home() {
             aria-live="assertive"
             className={`mt-8 border-2 rounded-xl p-5 ${
               error.isRateLimit
-                ? "border-amber-200 bg-amber-50"
-                : "border-red-200 bg-red-50"
+                ? "border-[var(--color-tier-yellow-border)] bg-[var(--color-tier-yellow-bg)]"
+                : "border-[var(--color-tier-red-border)] bg-[var(--color-tier-red-bg)]"
             }`}
           >
             <div className="flex items-start gap-3">

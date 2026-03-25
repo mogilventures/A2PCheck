@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -57,7 +58,13 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)]">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--accent)] focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+        >
+          Skip to content
+        </a>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -79,11 +86,14 @@ export default function RootLayout({
           }}
         />
         {children}
-        <footer className="mt-auto border-t border-stone-200 bg-stone-100/50 py-6 px-4 text-center text-xs text-stone-400">
+        <footer className="mt-auto border-t border-stone-200 dark:border-stone-700 bg-stone-100/50 dark:bg-stone-900/50 py-6 px-4 text-center text-xs text-stone-400">
           <p>
             A2PCheck provides guidance only — not legal advice or guaranteed
             carrier approval. Twilio/TCR may apply additional unpublished checks
             beyond this scanner.
+          </p>
+          <p className="mt-2">
+            <Link href="/privacy" className="underline hover:text-stone-600 transition-colors">Privacy Policy</Link>
           </p>
           <p className="mt-1">
             &copy; {new Date().getFullYear()} A2PCheck

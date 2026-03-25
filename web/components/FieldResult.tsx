@@ -6,9 +6,9 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import FixSuggestion from "./FixSuggestion";
 
 const tierBadge: Record<ScanTier, { bg: string; text: string; label: string; border: string }> = {
-  RED: { bg: "bg-red-100", text: "text-red-700", label: "FAIL", border: "border-l-[var(--color-tier-red)]" },
-  YELLOW: { bg: "bg-amber-100", text: "text-amber-700", label: "WARN", border: "border-l-[var(--color-tier-yellow)]" },
-  GREEN: { bg: "bg-green-100", text: "text-green-700", label: "PASS", border: "border-l-[var(--color-tier-green)]" },
+  RED: { bg: "bg-[var(--color-tier-red-bg)]", text: "text-[var(--color-tier-red)]", label: "FAIL", border: "border-l-[var(--color-tier-red)]" },
+  YELLOW: { bg: "bg-[var(--color-tier-yellow-bg)]", text: "text-[var(--color-tier-yellow)]", label: "WARN", border: "border-l-[var(--color-tier-yellow)]" },
+  GREEN: { bg: "bg-[var(--color-tier-green-bg)]", text: "text-[var(--color-tier-green)]", label: "PASS", border: "border-l-[var(--color-tier-green)]" },
 };
 
 export default function FieldResult({ result }: { result: FieldResultType }) {
@@ -36,16 +36,16 @@ export default function FieldResult({ result }: { result: FieldResultType }) {
   }, [open]);
 
   return (
-    <div className={`border border-stone-200 rounded-lg overflow-hidden border-l-[3px] ${badge.border}`}>
+    <div className={`border border-stone-200 dark:border-stone-700 rounded-lg overflow-hidden border-l-[3px] ${badge.border}`}>
       <button
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
       >
         <span className="text-stone-400">
           {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
-        <span className="flex-1 text-sm font-medium text-stone-800">
+        <span className="flex-1 text-sm font-medium text-stone-800 dark:text-stone-200">
           {result.displayName}
         </span>
         <span
@@ -60,8 +60,8 @@ export default function FieldResult({ result }: { result: FieldResultType }) {
         style={{ height: height !== undefined ? `${height}px` : "auto" }}
         className="transition-[height] duration-200 ease-in-out overflow-hidden"
       >
-        <div className="border-t border-stone-100 px-4 py-4 space-y-4">
-          <p className="text-sm text-stone-600">{result.rationale}</p>
+        <div className="border-t border-stone-100 dark:border-stone-700 px-4 py-4 space-y-4">
+          <p className="text-sm text-stone-600 dark:text-stone-400">{result.rationale}</p>
 
           {result.suggestions.length > 0 && (
             <div className="space-y-2">

@@ -61,7 +61,7 @@ export default function OverallTier({
         <div className={`${c.text} text-3xl font-bold tracking-tight`}>
           {c.label}
         </div>
-        <p className="text-stone-600 text-sm mt-1">{summary}</p>
+        <p className="text-stone-600 dark:text-stone-400 text-sm mt-1">{summary}</p>
       </div>
     </div>
   );

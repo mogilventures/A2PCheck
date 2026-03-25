@@ -31,10 +31,10 @@ export default function LoadingState({ quick }: { quick: boolean }) {
   }, [phaseIndex, currentPhases]);
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4">
+    <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-16 gap-4">
       <Loader2 size={32} className="animate-spin text-[var(--accent)]" />
       <p className="text-sm text-stone-500">{currentPhases[phaseIndex].label}</p>
-      <div className="w-64 bg-stone-200 rounded-full h-1.5">
+      <div className="w-64 bg-stone-200 dark:bg-stone-700 rounded-full h-1.5">
         <div
           className="bg-[var(--accent)] h-1.5 rounded-full transition-all duration-1000 ease-out"
           style={{

@@ -14,7 +14,7 @@ export default function WarningsList({ warnings }: { warnings: Warning[] }) {
       </h3>
       <ul className="space-y-2">
         {warnings.map((w, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
+          <li key={i} className="flex items-start gap-2 text-sm text-stone-700 dark:text-stone-300">
             <span className="shrink-0 mt-0.5 w-1.5 h-1.5 rounded-full bg-[var(--color-tier-yellow)]" />
             {w.message}
           </li>
