@@ -27,14 +27,18 @@ A2PCheck analyzes your 10DLC campaign fields (description, sample messages, opt-
 
 ## Architecture
 
+This repo is the OSS scanner engine — a Cloudflare Worker that exposes the scan API.
+
 ```
-Next.js frontend (Vercel)  -->  Cloudflare Worker API
-                                  |-- Deterministic scanners (instant)
-                                  |-- AI scanners (OpenRouter via CF AI Gateway)
-                                  |-- Firecrawl (URL content extraction)
-                                  |-- D1 database (scan history)
-                                  |-- KV (rate limiting)
+Cloudflare Worker API
+  |-- Deterministic scanners (instant)
+  |-- AI scanners (OpenRouter via CF AI Gateway)
+  |-- Firecrawl (URL content extraction)
+  |-- D1 database (scan history)
+  |-- KV (rate limiting)
 ```
+
+The frontend at [a2pcheck.com](https://a2pcheck.com) is a separate Next.js app that calls this API.
 
 ## Quick start
 
@@ -54,16 +58,6 @@ cp wrangler.toml.example wrangler.toml   # Fill in your D1 and KV IDs
 cp .dev.vars.example .dev.vars           # Fill in your API keys
 npm run dev                              # Starts on http://localhost:8787
 ```
-
-### Web (Frontend)
-
-```bash
-cd web
-npm install
-npm run dev                              # Starts on http://localhost:3000
-```
-
-The frontend expects the worker API at `http://localhost:8787` during development.
 
 ## Environment variables
 

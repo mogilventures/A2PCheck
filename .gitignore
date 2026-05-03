@@ -10,3 +10,4 @@ dist/
 twilio-docs/
 .vscode/
 worker/wrangler.toml
+docs/monetization.md
