@@ -34,8 +34,7 @@ Cloudflare Worker API
   |-- Deterministic scanners (instant)
   |-- AI scanners (OpenRouter via CF AI Gateway)
   |-- Firecrawl (URL content extraction)
-  |-- D1 database (scan history)
-  |-- KV (rate limiting)
+  |-- KV (IP rate limiting)
 ```
 
 The frontend at [a2pcheck.com](https://a2pcheck.com) is a separate Next.js app that calls this API.
@@ -54,7 +53,7 @@ The frontend at [a2pcheck.com](https://a2pcheck.com) is a separate Next.js app t
 ```bash
 cd worker
 npm install
-cp wrangler.toml.example wrangler.toml   # Fill in your D1 and KV IDs
+cp wrangler.toml.example wrangler.toml   # Fill in your KV namespace ID
 cp .dev.vars.example .dev.vars           # Fill in your API keys
 npm run dev                              # Starts on http://localhost:8787
 ```

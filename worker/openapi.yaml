@@ -12,9 +12,6 @@ servers:
   - url: https://api.a2pcheck.com
     description: Production
 
-security:
-  - bearerAuth: []
-
 paths:
   /api/v1/scan:
     post:
@@ -24,10 +21,10 @@ paths:
         Performs a full campaign scan including AI analysis and URL crawling.
         Takes approximately 15–20 seconds.
 
-        **Rate limits (API):** 10 requests/minute, 100 requests/day per API key.
+        **Rate limits:** 5 requests/hour, 20 requests/day per IP.
       x-ratelimit:
-        perMinute: 10
-        perDay: 100
+        perHour: 5
+        perDay: 20
       requestBody:
         required: true
         content:
@@ -43,18 +40,6 @@ paths:
                 $ref: '#/components/schemas/ScanResponse'
         '400':
           description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Missing or invalid API key
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Inactive API key
           content:
             application/json:
               schema:
@@ -81,10 +66,10 @@ paths:
         Fields that depend on URL content (e.g. privacy policy, terms of service)
         will return YELLOW tier placeholders indicating they were not checked.
 
-        **Rate limits (API):** 30 requests/minute, 300 requests/day per API key.
+        **Rate limits:** 5 requests/hour, 20 requests/day per IP.
       x-ratelimit:
-        perMinute: 30
-        perDay: 300
+        perHour: 5
+        perDay: 20
       requestBody:
         required: true
         content:
@@ -100,18 +85,6 @@ paths:
                 $ref: '#/components/schemas/ScanResponse'
         '400':
           description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Missing or invalid API key
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Inactive API key
           content:
             application/json:
               schema:
@@ -133,8 +106,7 @@ paths:
     get:
       operationId: healthCheck
       summary: Health check
-      description: Returns service health status. No authentication required.
-      security: []
+      description: Returns service health status.
       responses:
         '200':
           description: Service is healthy
@@ -153,8 +125,7 @@ paths:
     get:
       operationId: getOpenApiSpec
       summary: OpenAPI specification
-      description: Returns this OpenAPI specification as YAML. No authentication required.
-      security: []
+      description: Returns this OpenAPI specification as YAML.
       responses:
         '200':
           description: OpenAPI spec
@@ -164,14 +135,6 @@ paths:
                 type: string
 
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      description: |
-        API key with `a2p_live_` prefix. Include as a Bearer token in the
-        Authorization header: `Authorization: Bearer a2p_live_your_key`
-
   schemas:
     UseCaseType:
       type: string
@@ -450,8 +413,6 @@ components:
               type: string
               enum:
                 - VALIDATION_ERROR
-                - UNAUTHORIZED
-                - FORBIDDEN
                 - RATE_LIMITED
                 - INTERNAL_ERROR
                 - TIMEOUT

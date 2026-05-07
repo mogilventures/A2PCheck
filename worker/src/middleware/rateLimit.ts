@@ -35,47 +35,11 @@ async function checkWindow(env: Env, config: WindowConfig): Promise<RateLimitRes
 
 export async function checkRateLimit(
   caller: CallerContext,
-  env: Env,
-  quickScan: boolean
+  env: Env
 ): Promise<RateLimitResult | null> {
-  if (caller.type === 'web') {
-    // Web: 5/hour, 20/day by IP
-    const windows: WindowConfig[] = [
-      { key: `web:${caller.ip}`, limit: 5, windowSeconds: 3600 },
-      { key: `web:day:${caller.ip}`, limit: 20, windowSeconds: 86400 },
-    ];
-
-    for (const w of windows) {
-      const result = await checkWindow(env, w);
-      if (result) return result;
-    }
-    return null;
-  }
-
-  // API caller
-  const keyId = caller.apiKey!.id;
-
-  if (quickScan) {
-    // Quick scan API: 30/min, 300/day
-    const windows: WindowConfig[] = [
-      { key: `api:quick:${keyId}`, limit: 30, windowSeconds: 60 },
-      { key: `api:quick:day:${keyId}`, limit: 300, windowSeconds: 86400 },
-    ];
-
-    for (const w of windows) {
-      const result = await checkWindow(env, w);
-      if (result) return result;
-    }
-    return null;
-  }
-
-  // Full scan API: 10/min, 100/day
-  const perMinLimit = caller.apiKey!.rate_limit_per_minute;
-  const perDayLimit = caller.apiKey!.rate_limit_per_day;
-
   const windows: WindowConfig[] = [
-    { key: `api:${keyId}`, limit: perMinLimit, windowSeconds: 60 },
-    { key: `api:day:${keyId}`, limit: perDayLimit, windowSeconds: 86400 },
+    { key: `web:${caller.ip}`, limit: 5, windowSeconds: 3600 },
+    { key: `web:day:${caller.ip}`, limit: 20, windowSeconds: 86400 },
   ];
 
   for (const w of windows) {

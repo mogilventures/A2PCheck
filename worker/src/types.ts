@@ -85,7 +85,7 @@ export interface ErrorDetail {
 
 export interface ErrorResponse {
   error: {
-    code: 'VALIDATION_ERROR' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'RATE_LIMITED' | 'INTERNAL_ERROR' | 'TIMEOUT';
+    code: 'VALIDATION_ERROR' | 'RATE_LIMITED' | 'INTERNAL_ERROR' | 'TIMEOUT';
     message: string;
     details?: ErrorDetail[];
     retryAfterSeconds?: number;
@@ -96,29 +96,12 @@ export interface ErrorResponse {
 export interface Env {
   CF_AIG_TOKEN: string;
   AI_GATEWAY_URL: string;
-  DB: D1Database;
   RATE_LIMIT: KVNamespace;
   FIRECRAWL_API_KEY: string;
   ALLOWED_ORIGINS: string;
   RULES_VERSION: string;
 }
 
-export interface ApiKeyRecord {
-  id: string;
-  key_hash: string;
-  key_prefix: string;
-  name: string;
-  email: string;
-  created_at: string;
-  last_used_at: string | null;
-  is_active: number;
-  rate_limit_per_minute: number;
-  rate_limit_per_day: number;
-  total_scans: number;
-}
-
 export interface CallerContext {
-  type: 'web' | 'api';
   ip: string;
-  apiKey?: ApiKeyRecord;
 }

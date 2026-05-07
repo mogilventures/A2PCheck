@@ -23,7 +23,6 @@ What actually happened.
 
 **Environment**
 - Using hosted version (a2pcheck.com) or self-hosted?
-- Browser (if frontend issue):
 - Node version (if local):
 
 **Additional context**

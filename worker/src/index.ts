@@ -2,7 +2,6 @@ import { AutoRouter, cors, error, json, IRequest } from 'itty-router';
 import { Env, CallerContext, ErrorResponse } from './types';
 import { campaignInputSchema } from './validators/campaignInput';
 import { handlePreflight, withCors } from './middleware/cors';
-import { identifyCaller, AuthError } from './middleware/auth';
 import { checkRateLimit } from './middleware/rateLimit';
 import { orchestrateScan } from './scanners/index';
 import openapiSpec from '../openapi.yaml';
@@ -33,9 +32,10 @@ async function handleScan(request: IRequest, env: Env, quickScan: boolean): Prom
   const traceId = crypto.randomUUID();
 
   try {
-    const caller = await identifyCaller(request, env);
+    const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '0.0.0.0';
+    const caller: CallerContext = { ip };
 
-    const rateLimitResult = await checkRateLimit(caller, env, quickScan);
+    const rateLimitResult = await checkRateLimit(caller, env);
     if (rateLimitResult) {
       return json(
         {
@@ -88,18 +88,6 @@ async function handleScan(request: IRequest, env: Env, quickScan: boolean): Prom
     const result = await orchestrateScan(parsed.data, env, quickScan, traceId);
     return json(result);
   } catch (err) {
-    if (err instanceof AuthError) {
-      return json(
-        {
-          error: {
-            code: err.code,
-            message: err.message,
-            traceId,
-          },
-        } satisfies ErrorResponse,
-        { status: err.status }
-      );
-    }
     console.error('Scan error:', err);
     return json(
       {
