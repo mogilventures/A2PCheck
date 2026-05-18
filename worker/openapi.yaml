@@ -148,7 +148,12 @@ components:
         Selects the AI model used for analysis. Defaults to `standard`
         (`openai/gpt-4o-mini`). `premium` (`anthropic/claude-sonnet-4-6`)
         produces higher-quality analysis at higher cost and latency.
-        Unrecognized values fall back to `standard`.
+
+        `premium` requires an `Authorization: Bearer <PREMIUM_API_KEY>`
+        header matching the operator's configured secret. Requests for
+        `premium` without a valid key silently fall back to `standard`
+        — no error is returned. Unrecognized values also fall back to
+        `standard`.
       schema:
         type: string
         enum:
