@@ -100,6 +100,14 @@ export interface Env {
   FIRECRAWL_API_KEY: string;
   ALLOWED_ORIGINS: string;
   RULES_VERSION: string;
+  /**
+   * Optional shared secret that gates the `X-AI-Tier: premium` upgrade.
+   * Callers must send `Authorization: Bearer <PREMIUM_API_KEY>` together
+   * with `X-AI-Tier: premium`; otherwise the request silently falls back
+   * to the standard model. Leaving this unset disables the premium tier
+   * for every caller, which is the safe default for OSS deployments.
+   */
+  PREMIUM_API_KEY?: string;
 }
 
 export interface CallerContext {

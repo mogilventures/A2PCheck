@@ -6,12 +6,27 @@ export interface AiMessage {
   content: string;
 }
 
-const DEFAULT_MODEL = 'openai/gpt-4o-mini';
+export const MODELS = {
+  standard: 'openai/gpt-4o-mini',
+  premium: 'anthropic/claude-sonnet-4-6',
+} as const;
+
+export type AiTier = keyof typeof MODELS;
+
+export const DEFAULT_MODEL = MODELS.standard;
+
+export function resolveModel(tier: string | null | undefined): string {
+  if (tier && tier in MODELS) {
+    return MODELS[tier as AiTier];
+  }
+  return DEFAULT_MODEL;
+}
 
 export async function runAiAnalysis<T>(
   env: Env,
   messages: AiMessage[],
   schema: ZodSchema<T>,
+  model: string = DEFAULT_MODEL,
   retries = 1
 ): Promise<T | null> {
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -23,7 +38,7 @@ export async function runAiAnalysis<T>(
           'cf-aig-authorization': `Bearer ${env.CF_AIG_TOKEN}`,
         },
         body: JSON.stringify({
-          model: DEFAULT_MODEL,
+          model,
           messages,
           max_tokens: 1024,
           temperature: 0.1,

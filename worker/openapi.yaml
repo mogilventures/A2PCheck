@@ -25,6 +25,8 @@ paths:
       x-ratelimit:
         perHour: 5
         perDay: 20
+      parameters:
+        - $ref: '#/components/parameters/AiTier'
       requestBody:
         required: true
         content:
@@ -70,6 +72,8 @@ paths:
       x-ratelimit:
         perHour: 5
         perDay: 20
+      parameters:
+        - $ref: '#/components/parameters/AiTier'
       requestBody:
         required: true
         content:
@@ -135,6 +139,27 @@ paths:
                 type: string
 
 components:
+  parameters:
+    AiTier:
+      name: X-AI-Tier
+      in: header
+      required: false
+      description: |
+        Selects the AI model used for analysis. Defaults to `standard`
+        (`openai/gpt-4o-mini`). `premium` (`anthropic/claude-sonnet-4-6`)
+        produces higher-quality analysis at higher cost and latency.
+
+        `premium` requires an `Authorization: Bearer <PREMIUM_API_KEY>`
+        header matching the operator's configured secret. Requests for
+        `premium` without a valid key silently fall back to `standard`
+        — no error is returned. Unrecognized values also fall back to
+        `standard`.
+      schema:
+        type: string
+        enum:
+          - standard
+          - premium
+
   schemas:
     UseCaseType:
       type: string

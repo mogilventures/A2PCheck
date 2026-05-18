@@ -17,7 +17,8 @@ export function scanTermsOfServiceQuick(): FieldResult {
 export async function scanTermsOfService(
   input: ScanRequest,
   env: Env,
-  crawlResult: FirecrawlResult | undefined
+  crawlResult: FirecrawlResult | undefined,
+  model: string
 ): Promise<FieldResult> {
   if (!input.termsOfServiceUrl) {
     return {
@@ -86,7 +87,8 @@ Terms of Service content (first ${crawlResult.content.length} characters):
 ${crawlResult.content}`,
       },
     ],
-    aiResultSchema
+    aiResultSchema,
+    model
   );
 
   if (!result) {

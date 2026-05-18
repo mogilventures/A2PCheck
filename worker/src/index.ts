@@ -4,6 +4,7 @@ import { campaignInputSchema } from './validators/campaignInput';
 import { handlePreflight, withCors } from './middleware/cors';
 import { checkRateLimit } from './middleware/rateLimit';
 import { orchestrateScan } from './scanners/index';
+import { resolveModel } from './services/ai';
 import openapiSpec from '../openapi.yaml';
 
 const router = AutoRouter<IRequest, [Env]>();
@@ -85,7 +86,11 @@ async function handleScan(request: IRequest, env: Env, quickScan: boolean): Prom
       );
     }
 
-    const result = await orchestrateScan(parsed.data, env, quickScan, traceId);
+    const requestedTier = request.headers.get('X-AI-Tier');
+    const effectiveTier = authorizeTier(requestedTier, request, env, traceId);
+    const model = resolveModel(effectiveTier);
+
+    const result = await orchestrateScan(parsed.data, env, quickScan, traceId, model);
     return json(result);
   } catch (err) {
     console.error('Scan error:', err);
@@ -100,6 +105,36 @@ async function handleScan(request: IRequest, env: Env, quickScan: boolean): Prom
       { status: 500 }
     );
   }
+}
+
+function authorizeTier(
+  requestedTier: string | null,
+  request: IRequest,
+  env: Env,
+  traceId: string
+): string | null {
+  if (requestedTier !== 'premium') {
+    return requestedTier;
+  }
+
+  const auth = request.headers.get('Authorization');
+  const provided = auth?.replace(/^Bearer\s+/i, '').trim();
+
+  if (env.PREMIUM_API_KEY && provided && timingSafeEqual(provided, env.PREMIUM_API_KEY)) {
+    return 'premium';
+  }
+
+  console.warn('Premium tier requested without a valid key; falling back to standard', { traceId });
+  return null;
+}
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
 }
 
 export default {

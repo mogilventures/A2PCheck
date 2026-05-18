@@ -17,7 +17,8 @@ export function scanPrivacyPolicyQuick(): FieldResult {
 export async function scanPrivacyPolicy(
   input: ScanRequest,
   env: Env,
-  crawlResult: FirecrawlResult | undefined
+  crawlResult: FirecrawlResult | undefined,
+  model: string
 ): Promise<FieldResult> {
   if (!input.privacyPolicyUrl) {
     return {
@@ -93,7 +94,8 @@ Privacy policy content (first ${crawlResult.content.length} characters):
 ${crawlResult.content}`,
       },
     ],
-    aiResultSchema
+    aiResultSchema,
+    model
   );
 
   if (!result) {

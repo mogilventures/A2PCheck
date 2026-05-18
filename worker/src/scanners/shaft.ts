@@ -1,7 +1,11 @@
 import { ScanRequest, FieldResult, Env } from '../types';
 import { runAiAnalysis, aiResultSchema, AiResult } from '../services/ai';
 
-export async function scanShaft(input: ScanRequest, env: Env): Promise<FieldResult> {
+export async function scanShaft(
+  input: ScanRequest,
+  env: Env,
+  model: string
+): Promise<FieldResult> {
   const result = await runAiAnalysis<AiResult>(
     env,
     [
@@ -41,7 +45,8 @@ Content flags:
 - Direct lending: ${input.directLending ?? 'not specified'}`,
       },
     ],
-    aiResultSchema
+    aiResultSchema,
+    model
   );
 
   if (!result) {
