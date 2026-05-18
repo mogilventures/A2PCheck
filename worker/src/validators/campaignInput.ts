@@ -1,7 +1,22 @@
 import { z } from 'zod';
 import { VALID_USE_CASES } from '../utils/useCases';
 
-const urlSchema = z.string().url('Must be a valid URL').optional();
+const urlSchema = z
+  .string()
+  .url('Must be a valid URL')
+  .max(2048, 'URL must be 2048 characters or fewer')
+  .refine(
+    (value) => {
+      try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    },
+    { message: 'URL must use http or https' }
+  )
+  .optional();
 
 export const campaignInputSchema = z.object({
   useCaseType: z.enum([...VALID_USE_CASES] as [string, ...string[]], {
