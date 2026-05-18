@@ -1,7 +1,11 @@
 import { ScanRequest, FieldResult, Env } from '../types';
 import { runAiAnalysis, aiResultSchema, AiResult } from '../services/ai';
 
-export async function scanConsistency(input: ScanRequest, env: Env): Promise<FieldResult> {
+export async function scanConsistency(
+  input: ScanRequest,
+  env: Env,
+  model: string
+): Promise<FieldResult> {
   const result = await runAiAnalysis<AiResult>(
     env,
     [
@@ -39,7 +43,8 @@ Opt-out keywords: ${input.optOutKeywords?.join(', ') || 'none'}
 Content flags - Embedded links: ${input.embeddedLinks ?? 'not specified'}, Embedded phone numbers: ${input.embeddedPhoneNumbers ?? 'not specified'}`,
       },
     ],
-    aiResultSchema
+    aiResultSchema,
+    model
   );
 
   if (!result) {

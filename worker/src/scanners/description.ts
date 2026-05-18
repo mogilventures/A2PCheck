@@ -1,7 +1,11 @@
 import { ScanRequest, FieldResult, Env } from '../types';
 import { runAiAnalysis, aiResultSchema, AiResult } from '../services/ai';
 
-export async function scanDescription(input: ScanRequest, env: Env): Promise<FieldResult> {
+export async function scanDescription(
+  input: ScanRequest,
+  env: Env,
+  model: string
+): Promise<FieldResult> {
   const result = await runAiAnalysis<AiResult>(
     env,
     [
@@ -33,7 +37,8 @@ Campaign description: "${input.campaignDescription}"
 ${input.businessName ? `Business name: ${input.businessName}` : ''}`,
       },
     ],
-    aiResultSchema
+    aiResultSchema,
+    model
   );
 
   if (!result) {

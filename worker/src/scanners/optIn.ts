@@ -1,7 +1,11 @@
 import { ScanRequest, FieldResult, Env } from '../types';
 import { runAiAnalysis, aiResultSchema, AiResult } from '../services/ai';
 
-export async function scanOptIn(input: ScanRequest, env: Env): Promise<FieldResult> {
+export async function scanOptIn(
+  input: ScanRequest,
+  env: Env,
+  model: string
+): Promise<FieldResult> {
   const result = await runAiAnalysis<AiResult>(
     env,
     [
@@ -33,7 +37,8 @@ ${input.optInMessage ? `Opt-in message: "${input.optInMessage}"` : 'No opt-in co
 ${input.websiteUrl ? `Website URL: ${input.websiteUrl}` : 'No website URL provided'}`,
       },
     ],
-    aiResultSchema
+    aiResultSchema,
+    model
   );
 
   if (!result) {

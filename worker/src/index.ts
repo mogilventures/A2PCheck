@@ -4,6 +4,7 @@ import { campaignInputSchema } from './validators/campaignInput';
 import { handlePreflight, withCors } from './middleware/cors';
 import { checkRateLimit } from './middleware/rateLimit';
 import { orchestrateScan } from './scanners/index';
+import { resolveModel } from './services/ai';
 import openapiSpec from '../openapi.yaml';
 
 const router = AutoRouter<IRequest, [Env]>();
@@ -85,7 +86,10 @@ async function handleScan(request: IRequest, env: Env, quickScan: boolean): Prom
       );
     }
 
-    const result = await orchestrateScan(parsed.data, env, quickScan, traceId);
+    const aiTier = request.headers.get('X-AI-Tier');
+    const model = resolveModel(aiTier);
+
+    const result = await orchestrateScan(parsed.data, env, quickScan, traceId, model);
     return json(result);
   } catch (err) {
     console.error('Scan error:', err);

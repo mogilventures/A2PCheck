@@ -27,7 +27,8 @@ export async function orchestrateScan(
   input: CampaignInput,
   env: Env,
   quickScan: boolean,
-  traceId: string
+  traceId: string,
+  model: string
 ): Promise<ScanResponse> {
   const startTime = Date.now();
   const fieldResults: FieldResult[] = [];
@@ -41,12 +42,12 @@ export async function orchestrateScan(
 
   // --- Phase 2a: Parallel AI + Firecrawl ---
   const phase2aPromises: Promise<FieldResult>[] = [
-    wrapScanner(() => scanDescription(input as ScanRequest, env), 'campaignDescription', 'Campaign Description'),
-    wrapScanner(() => scanSampleMessages(input as ScanRequest, env), 'sampleMessages', 'Sample Messages'),
-    wrapScanner(() => scanOptIn(input as ScanRequest, env), 'messageFlow', 'Opt-In / Consent Flow'),
-    wrapScanner(() => scanShaft(input as ScanRequest, env), 'shaftContent', 'SHAFT Content Check'),
+    wrapScanner(() => scanDescription(input as ScanRequest, env, model), 'campaignDescription', 'Campaign Description'),
+    wrapScanner(() => scanSampleMessages(input as ScanRequest, env, model), 'sampleMessages', 'Sample Messages'),
+    wrapScanner(() => scanOptIn(input as ScanRequest, env, model), 'messageFlow', 'Opt-In / Consent Flow'),
+    wrapScanner(() => scanShaft(input as ScanRequest, env, model), 'shaftContent', 'SHAFT Content Check'),
     wrapScanner(
-      () => scanAffiliateMarketing(input as ScanRequest, env),
+      () => scanAffiliateMarketing(input as ScanRequest, env, model),
       'affiliateMarketing',
       'Affiliate Marketing Check'
     ),
@@ -125,12 +126,12 @@ export async function orchestrateScan(
   } else {
     const phase2bPromises: Promise<FieldResult>[] = [
       wrapScanner(
-        () => scanPrivacyPolicy(input as ScanRequest, env, crawlResults?.get('privacyPolicy')),
+        () => scanPrivacyPolicy(input as ScanRequest, env, crawlResults?.get('privacyPolicy'), model),
         'privacyPolicy',
         'Privacy Policy'
       ),
       wrapScanner(
-        () => scanTermsOfService(input as ScanRequest, env, crawlResults?.get('termsOfService')),
+        () => scanTermsOfService(input as ScanRequest, env, crawlResults?.get('termsOfService'), model),
         'termsOfService',
         'Terms of Service'
       ),
@@ -138,7 +139,7 @@ export async function orchestrateScan(
 
     // Consistency check uses all data
     phase2bPromises.push(
-      wrapScanner(() => scanConsistency(input as ScanRequest, env), 'consistency', 'Cross-Field Consistency')
+      wrapScanner(() => scanConsistency(input as ScanRequest, env, model), 'consistency', 'Cross-Field Consistency')
     );
 
     const phase2bResults = await withTimeout(
@@ -175,7 +176,7 @@ export async function orchestrateScan(
     metadata: {
       scanDurationMs,
       fieldsAnalyzed: deduped.length,
-      aiModel: 'openai/gpt-4o-mini',
+      aiModel: model,
       urlsCrawled,
       quickScan: quickScan || undefined,
       partial: scanDurationMs > GLOBAL_TIMEOUT_MS ? true : undefined,
