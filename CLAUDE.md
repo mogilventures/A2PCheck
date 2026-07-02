@@ -2,6 +2,14 @@
 
 Single-package repo: the `worker/` Cloudflare Worker scanner API. See `README.md` for full project context.
 
+## Workspace relationship
+
+This repo lives in the local workspace `/root/github_repos/ventures/a2pcheck/` beside `../a2pcheck-app/`.
+
+Claude must treat this repo and `../a2pcheck-app/` as separate git repos with separate remotes, branches, commits, dependencies, and deployment surfaces. Do not merge the repos, initialize git in the parent workspace, create submodules, or move secrets/env files between repos unless Noah explicitly asks.
+
+For cross-repo work, inspect `../CLAUDE.md` and add the sibling app repo with `/add-dir ../a2pcheck-app` if it is not already in scope. Keep commits separate per child repo and only commit if Noah explicitly asks.
+
 ## Commands
 
 There are no root-level scripts. Always `cd worker` first.
