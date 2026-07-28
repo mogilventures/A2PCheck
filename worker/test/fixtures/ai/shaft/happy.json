@@ -1,0 +1,33 @@
+{
+  "request": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an A2P 10DLC campaign compliance expert. Detect SHAFT content violations.\n\nSHAFT = Sex, Hate, Alcohol, Firearms, Tobacco (also includes cannabis/marijuana).\n\nRULES (from Twilio/TCR guidelines):\n- Error code 30883 = Content Violation — campaign contains prohibited SHAFT content\n- Content Violations are NOT remediable through resubmission\n- Check ALL provided fields: description, sample messages, and use case\n- Be thorough but avoid false positives — context matters\n- Medical/pharmaceutical references are not automatically SHAFT unless promoting controlled substances\n- News/educational content about SHAFT topics may be acceptable depending on use case\n- Direct promotion, sales, or marketing of SHAFT products/services = RED\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}\n\n- RED: Clear SHAFT content detected\n- YELLOW: Borderline content that could be flagged\n- GREEN: No SHAFT content concerns"
+      },
+      {
+        "role": "user",
+        "content": "Campaign use case: MARKETING\nCampaign description: \"BrightMarket sends weekly product offers and seasonal discounts to customers who explicitly consent on its checkout form. Messages identify BrightMarket and help customers save on products they requested updates about.\"\nBusiness name: BrightMarket\n\nSample messages:\n1. \"BrightMarket: Hi [first name], save 20% on your next order through [date]. Reply STOP to unsubscribe.\"\n2. \"BrightMarket: Your requested weekly offer is ready. Visit https://brightmarket.example/offers. Reply HELP for help.\"\n\nContent flags:\n- Age-gated content: false\n- Direct lending: false"
+      }
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.1,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "response": {
+    "ok": true,
+    "status": 200,
+    "body": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"No SHAFT content concerns detected in the campaign description or sample messages.\"}"
+          }
+        }
+      ]
+    }
+  }
+}

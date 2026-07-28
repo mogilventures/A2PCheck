@@ -77,6 +77,10 @@ npm run dev                              # Starts on http://localhost:8787
 
 See `worker/.dev.vars.example` and `worker/wrangler.toml.example` for full details.
 
+## Contributing and AI fixtures
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for offline testing and the explicit, billable command that sequentially refreshes request-bound AI scanner fixtures.
+
 ## API
 
 The worker serves an OpenAPI spec at `GET /api/v1/openapi.yaml`.

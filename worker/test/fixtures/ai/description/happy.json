@@ -1,0 +1,33 @@
+{
+  "request": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an A2P 10DLC campaign compliance expert. Analyze campaign descriptions for quality and compliance.\n\nRULES (from Twilio/TCR guidelines):\n- Description must clearly explain the campaign's purpose and objective\n- Must describe the type of messages that will be sent\n- Must not be vague, generic, or too short\n- Should mention the target audience\n- Should explain the value proposition to message recipients\n- Descriptions that just restate the use case name (e.g., \"Marketing messages\") are rejected\n\nError code 30886 = \"Invalid campaign description\" — description was not detailed enough or didn't match the use case.\n\nRespond with ONLY valid JSON in this format:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}\n\n- RED: Description is vague, generic, or fails to explain campaign purpose\n- YELLOW: Description is acceptable but could be more detailed\n- GREEN: Description is clear, detailed, and explains the campaign well"
+      },
+      {
+        "role": "user",
+        "content": "Campaign use case: MARKETING\nCampaign description: \"BrightMarket sends weekly product offers and seasonal discounts to customers who explicitly consent on its checkout form. Messages identify BrightMarket and help customers save on products they requested updates about.\"\nBusiness name: BrightMarket"
+      }
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.1,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "response": {
+    "ok": true,
+    "status": 200,
+    "body": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The campaign description clearly explains the purpose and objective of the campaign, detailing that it sends weekly product offers and seasonal discounts. It specifies that messages are sent to customers who have explicitly consented, identifies the sender, and highlights the value proposition of helping customers save on products they are interested in.\"}"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "request": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an A2P 10DLC campaign compliance expert. Analyze terms of service for messaging compliance.\n\nRULES:\n- Terms of service should mention SMS/text messaging terms\n- Should describe messaging frequency, costs, and opt-out procedures\n- Should mention that message and data rates may apply\n- A generic ToS without messaging terms = YELLOW\n- A ToS that covers messaging terms = GREEN\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}"
+      },
+      {
+        "role": "user",
+        "content": "Terms of Service URL: https://brightmarket.example/terms\nBusiness name: BrightMarket\n\nTerms of Service content (first 126 characters):\nThese website terms govern purchases from BrightMarket. Customers agree to pay for completed orders and follow the site rules."
+      }
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.1,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "response": {
+    "ok": true,
+    "status": 200,
+    "body": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\"tier\": \"YELLOW\", \"issues\": [\"No mention of SMS/text messaging terms\", \"No description of messaging frequency\", \"No mention of costs associated with messaging\", \"No opt-out procedures provided\", \"No indication that message and data rates may apply\"], \"suggestions\": [\"Include specific terms related to SMS/text messaging\", \"Outline messaging frequency and costs\", \"Provide clear opt-out procedures for users\", \"Mention that message and data rates may apply\"], \"rationale\": \"The terms of service do not address any aspects related to SMS or text messaging, which is essential for compliance.\"}"
+          }
+        }
+      ]
+    }
+  }
+}

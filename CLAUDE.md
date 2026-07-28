@@ -19,13 +19,14 @@ There are no root-level scripts. Always `cd worker` first.
 ```bash
 npm run dev       # Start Wrangler dev server
 npm run deploy    # Deploy to Cloudflare
-npm test          # Run Vitest tests
+npm test                    # Run all offline Vitest tests
 npm run test:watch
+npm run fixtures:ai:record  # Billable/networked; sequentially refresh AI replay fixtures
 ```
 
 ## Key conventions
 
-- **Scanner pattern**: each scanner exports a function `(input: ScanRequest, env: Env) => FieldResult | Promise<FieldResult>`, registered in `worker/src/scanners/index.ts` via `orchestrateScan()`.
+- **Scanner pattern**: deterministic scanners take `ScanRequest`; AI scanners take the intentional `AiGateway` seam plus a model. Register scanners in `worker/src/scanners/index.ts` via `orchestrateScan()`. Construct the production gateway only at the HTTP composition boundary.
 - **Scan phases**: deterministic scanners run in Phase 1 (synchronous, instant). AI scanners run in Phase 2a (parallel async). Firecrawl-dependent scanners run in Phase 2b.
 - **Path alias**: `@/` maps to `worker/src/` in the worker package.
 - **TypeScript strict mode**. No linter configured.
@@ -41,4 +42,15 @@ See `README.md` for the full list of required variables.
 
 ## Testing
 
-Only deterministic scanners have tests currently. Tests live in `worker/test/` and use Vitest.
+Tests live in `worker/test/` and use Vitest. `npm test` is offline and must not require AI, Firecrawl, or other external credentials. AI scanner tests replay parsed, request-bound fixtures under `worker/test/fixtures/ai/`; prompt, model, or request-control drift must fail until fixtures are intentionally re-recorded. Do not replace `AiGateway` with `vi.mock`, `vi.spyOn`, or patched global `fetch`.
+
+AI fixture recording is an explicit billable/networked operation:
+
+```bash
+cd worker
+AI_GATEWAY_URL='https://…' CF_AIG_TOKEN='…' npm run fixtures:ai:record
+```
+
+The command runs sequentially with the standard model, validates the provider envelope and scanner result schema, and atomically overwrites each fixture. It refuses to write anything if either credential is absent. Fixtures contain only synthetic campaign content and the minimum replay envelope; never add secrets or provider metadata.
+
+GitHub issue #8 supersedes the earlier fixture-testing request in #5.

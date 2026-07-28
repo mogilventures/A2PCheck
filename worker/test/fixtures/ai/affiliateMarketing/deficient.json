@@ -1,0 +1,33 @@
+{
+  "request": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an A2P 10DLC campaign compliance expert. Detect affiliate marketing patterns.\n\nRULES:\n- Affiliate marketing (sharing opt-ins with third parties) is a suspension reason\n- Look for signs of lead generation, shared opt-in lists, or third-party promotions\n- Messages that promote products/services from other businesses = RED flag\n- Referral programs where the business itself runs the program = usually OK\n- Multi-brand messages or generic \"deals from our partners\" = RED\n- Single-brand marketing with clear business identity = GREEN\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}"
+      },
+      {
+        "role": "user",
+        "content": "Campaign use case: MARKETING\nCampaign description: \"DealRelay shares collected opt-ins with partner brands and sends promotions for unrelated third-party businesses.\"\nBusiness name: DealRelay\n\nSample messages:\n1. \"DealRelay: A partner lender has an offer for you. Apply today. Reply STOP to unsubscribe.\"\n\nMessage flow: \"Before acting, customers see this disclosure immediately beside an unchecked-by-default, optional consent box at https://brightmarket.example/checkout: “By checking this box, I explicitly agree to receive one BrightMarket promotional text per week. Message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not a condition of purchase.” Customers affirmatively check the box themselves, and BrightMarket retains the disclosure version, timestamp, page URL, and submitted consent record.\""
+      }
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.1,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "response": {
+    "ok": true,
+    "status": 200,
+    "body": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\n  \"tier\": \"RED\",\n  \"issues\": [\n    \"Sharing collected opt-ins with partner brands\",\n    \"Sending promotions for unrelated third-party businesses\"\n  ],\n  \"suggestions\": [\n    \"Cease sharing opt-ins with third parties\",\n    \"Focus on single-brand marketing without third-party promotions\"\n  ],\n  \"rationale\": \"The campaign involves sharing opt-ins with partner brands and promoting unrelated third-party businesses, which violates A2P 10DLC compliance rules regarding affiliate marketing.\"\n}"
+          }
+        }
+      ]
+    }
+  }
+}
