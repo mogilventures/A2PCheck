@@ -1,0 +1,33 @@
+{
+  "request": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an A2P 10DLC campaign compliance expert. Check cross-field consistency across all campaign data.\n\nCheck for:\n1. Use case vs sample messages — do messages match the declared purpose?\n2. Use case vs description — does the description match the use case?\n3. Description vs sample messages — are they telling a consistent story?\n4. Business name in sample messages — is the business identified?\n5. Opt-in flow vs message content — does the opt-in match what's being sent?\n6. Content flags vs actual content — are URLs/phones flagged correctly?\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}\n\n- RED: Major inconsistency (e.g., MARKETING use case but messages are OTP codes)\n- YELLOW: Minor inconsistency or missing cross-references\n- GREEN: All fields are consistent"
+      },
+      {
+        "role": "user",
+        "content": "Campaign use case: MARKETING\nCampaign description: \"BrightMarket sends weekly product offers and seasonal discounts to customers who explicitly consent on its checkout form. Messages identify BrightMarket and help customers save on products they requested updates about.\"\nBusiness name: BrightMarket\nMessage flow: \"Before acting, customers see this disclosure immediately beside an unchecked-by-default, optional consent box at https://brightmarket.example/checkout: “By checking this box, I explicitly agree to receive one BrightMarket promotional text per week. Message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not a condition of purchase.” Customers affirmatively check the box themselves, and BrightMarket retains the disclosure version, timestamp, page URL, and submitted consent record.\"\n\nSample messages:\n1. \"BrightMarket: Hi [first name], save 20% on your next order through [date]. Reply STOP to unsubscribe.\"\n2. \"BrightMarket: Your requested weekly offer is ready. Visit https://brightmarket.example/offers. Reply HELP for help.\"\n\nOpt-in keywords: START\nOpt-out keywords: STOP\nContent flags - Embedded links: true, Embedded phone numbers: false"
+      }
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.1,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "response": {
+    "ok": true,
+    "status": 200,
+    "body": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\n  \"tier\": \"GREEN\",\n  \"issues\": [],\n  \"suggestions\": [],\n  \"rationale\": \"All fields are consistent. The use case of MARKETING aligns with the campaign description, which accurately reflects the purpose of sending promotional messages. The sample messages identify the business name, match the declared purpose, and the opt-in flow is consistent with the message content. Content flags are correctly applied to the embedded links.\"\n}"
+          }
+        }
+      ]
+    }
+  }
+}

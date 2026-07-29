@@ -1,7 +1,9 @@
-import { ScanRequest, ScanResponse, FieldResult, Env, ScanTier } from '../types';
-import { CampaignInput } from '../validators/campaignInput';
+import type { ScanRequest, ScanResponse, FieldResult, Env, ScanTier } from '../types';
+import type { CampaignInput } from '../validators/campaignInput';
 import { rollupResults } from '../scoring/rollup';
-import { crawlUrls, FirecrawlResult } from '../services/firecrawl';
+import { crawlUrls } from '../services/firecrawl';
+import type { FirecrawlResult } from '../services/firecrawl';
+import type { AiGateway } from '../services/ai';
 
 // Deterministic scanners
 import { scanUrls } from './urls';
@@ -26,6 +28,7 @@ const GLOBAL_TIMEOUT_MS = 45000;
 export async function orchestrateScan(
   input: CampaignInput,
   env: Env,
+  aiGateway: AiGateway,
   quickScan: boolean,
   traceId: string,
   model: string
@@ -42,12 +45,12 @@ export async function orchestrateScan(
 
   // --- Phase 2a: Parallel AI + Firecrawl ---
   const phase2aPromises: Promise<FieldResult>[] = [
-    wrapScanner(() => scanDescription(input as ScanRequest, env, model), 'campaignDescription', 'Campaign Description'),
-    wrapScanner(() => scanSampleMessages(input as ScanRequest, env, model), 'sampleMessages', 'Sample Messages'),
-    wrapScanner(() => scanOptIn(input as ScanRequest, env, model), 'messageFlow', 'Opt-In / Consent Flow'),
-    wrapScanner(() => scanShaft(input as ScanRequest, env, model), 'shaftContent', 'SHAFT Content Check'),
+    wrapScanner(() => scanDescription(input as ScanRequest, aiGateway, model), 'campaignDescription', 'Campaign Description'),
+    wrapScanner(() => scanSampleMessages(input as ScanRequest, aiGateway, model), 'sampleMessages', 'Sample Messages'),
+    wrapScanner(() => scanOptIn(input as ScanRequest, aiGateway, model), 'messageFlow', 'Opt-In / Consent Flow'),
+    wrapScanner(() => scanShaft(input as ScanRequest, aiGateway, model), 'shaftContent', 'SHAFT Content Check'),
     wrapScanner(
-      () => scanAffiliateMarketing(input as ScanRequest, env, model),
+      () => scanAffiliateMarketing(input as ScanRequest, aiGateway, model),
       'affiliateMarketing',
       'Affiliate Marketing Check'
     ),
@@ -126,12 +129,12 @@ export async function orchestrateScan(
   } else {
     const phase2bPromises: Promise<FieldResult>[] = [
       wrapScanner(
-        () => scanPrivacyPolicy(input as ScanRequest, env, crawlResults?.get('privacyPolicy'), model),
+        () => scanPrivacyPolicy(input as ScanRequest, aiGateway, crawlResults?.get('privacyPolicy'), model),
         'privacyPolicy',
         'Privacy Policy'
       ),
       wrapScanner(
-        () => scanTermsOfService(input as ScanRequest, env, crawlResults?.get('termsOfService'), model),
+        () => scanTermsOfService(input as ScanRequest, aiGateway, crawlResults?.get('termsOfService'), model),
         'termsOfService',
         'Terms of Service'
       ),
@@ -139,7 +142,7 @@ export async function orchestrateScan(
 
     // Consistency check uses all data
     phase2bPromises.push(
-      wrapScanner(() => scanConsistency(input as ScanRequest, env, model), 'consistency', 'Cross-Field Consistency')
+      wrapScanner(() => scanConsistency(input as ScanRequest, aiGateway, model), 'consistency', 'Cross-Field Consistency')
     );
 
     const phase2bResults = await withTimeout(

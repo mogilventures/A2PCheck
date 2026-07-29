@@ -1,13 +1,14 @@
-import { ScanRequest, FieldResult, Env } from '../types';
-import { runAiAnalysis, aiResultSchema, AiResult } from '../services/ai';
+import type { ScanRequest, FieldResult } from '../types';
+import { runAiAnalysis, aiResultSchema } from '../services/ai';
+import type { AiGateway, AiResult } from '../services/ai';
 
 export async function scanAffiliateMarketing(
   input: ScanRequest,
-  env: Env,
+  gateway: AiGateway,
   model: string
 ): Promise<FieldResult> {
   const result = await runAiAnalysis<AiResult>(
-    env,
+    gateway,
     [
       {
         role: 'system',

@@ -1,6 +1,7 @@
-import { ScanRequest, FieldResult, Env } from '../types';
-import { runAiAnalysis, aiResultSchema, AiResult } from '../services/ai';
-import { FirecrawlResult } from '../services/firecrawl';
+import type { ScanRequest, FieldResult } from '../types';
+import { runAiAnalysis, aiResultSchema } from '../services/ai';
+import type { AiGateway, AiResult } from '../services/ai';
+import type { FirecrawlResult } from '../services/firecrawl';
 
 export function scanTermsOfServiceQuick(): FieldResult {
   return {
@@ -16,7 +17,7 @@ export function scanTermsOfServiceQuick(): FieldResult {
 
 export async function scanTermsOfService(
   input: ScanRequest,
-  env: Env,
+  gateway: AiGateway,
   crawlResult: FirecrawlResult | undefined,
   model: string
 ): Promise<FieldResult> {
@@ -62,7 +63,7 @@ export async function scanTermsOfService(
   }
 
   const result = await runAiAnalysis<AiResult>(
-    env,
+    gateway,
     [
       {
         role: 'system',

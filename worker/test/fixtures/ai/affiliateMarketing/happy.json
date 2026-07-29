@@ -1,0 +1,33 @@
+{
+  "request": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an A2P 10DLC campaign compliance expert. Detect affiliate marketing patterns.\n\nRULES:\n- Affiliate marketing (sharing opt-ins with third parties) is a suspension reason\n- Look for signs of lead generation, shared opt-in lists, or third-party promotions\n- Messages that promote products/services from other businesses = RED flag\n- Referral programs where the business itself runs the program = usually OK\n- Multi-brand messages or generic \"deals from our partners\" = RED\n- Single-brand marketing with clear business identity = GREEN\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}"
+      },
+      {
+        "role": "user",
+        "content": "Campaign use case: MARKETING\nCampaign description: \"BrightMarket sends weekly product offers and seasonal discounts to customers who explicitly consent on its checkout form. Messages identify BrightMarket and help customers save on products they requested updates about.\"\nBusiness name: BrightMarket\n\nSample messages:\n1. \"BrightMarket: Hi [first name], save 20% on your next order through [date]. Reply STOP to unsubscribe.\"\n2. \"BrightMarket: Your requested weekly offer is ready. Visit https://brightmarket.example/offers. Reply HELP for help.\"\n\nMessage flow: \"Before acting, customers see this disclosure immediately beside an unchecked-by-default, optional consent box at https://brightmarket.example/checkout: “By checking this box, I explicitly agree to receive one BrightMarket promotional text per week. Message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not a condition of purchase.” Customers affirmatively check the box themselves, and BrightMarket retains the disclosure version, timestamp, page URL, and submitted consent record.\""
+      }
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.1,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "response": {
+    "ok": true,
+    "status": 200,
+    "body": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\n  \"tier\": \"GREEN\",\n  \"issues\": [],\n  \"suggestions\": [],\n  \"rationale\": \"The campaign clearly identifies BrightMarket as the sender, promotes offers directly related to the business, and has a transparent opt-in process with explicit consent from customers. There are no signs of affiliate marketing or shared opt-in lists.\"\n}"
+          }
+        }
+      ]
+    }
+  }
+}

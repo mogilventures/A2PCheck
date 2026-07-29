@@ -1,0 +1,33 @@
+{
+  "request": {
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are an A2P 10DLC campaign compliance expert. Analyze sample messages for quality and use case alignment.\n\nRULES (from Twilio/TCR guidelines):\n- Sample messages must reflect actual messages to be sent under the campaign\n- At least one sample message should include the business name\n- Templated/variable fields should be indicated with brackets, e.g., [customer name]\n- Messages must match the declared campaign use case\n- Messages should not be generic or placeholder text\n- Opt-out instructions (e.g., \"Reply STOP to unsubscribe\") should appear in at least one message\n- Sample messages that are ONLY opt-out messages (e.g., \"You've been unsubscribed\") are rejected — they must show actual campaign content\n\nError code 30893 = \"Invalid sample message\" — messages are unclear, don't match use case, or are not representative.\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}\n\n- RED: Messages are generic, don't match use case, or violate rules\n- YELLOW: Messages are acceptable but could be improved\n- GREEN: Messages are clear, match use case, and follow best practices"
+      },
+      {
+        "role": "user",
+        "content": "Campaign use case: MARKETING\nBusiness name: BrightMarket\nCampaign description: \"BrightMarket sends weekly product offers and seasonal discounts to customers who explicitly consent on its checkout form. Messages identify BrightMarket and help customers save on products they requested updates about.\"\n\nSample messages:\n1. \"BrightMarket: Hi [first name], save 20% on your next order through [date]. Reply STOP to unsubscribe.\"\n2. \"BrightMarket: Your requested weekly offer is ready. Visit https://brightmarket.example/offers. Reply HELP for help.\""
+      }
+    ],
+    "max_tokens": 1024,
+    "temperature": 0.1,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "response": {
+    "ok": true,
+    "status": 200,
+    "body": {
+      "choices": [
+        {
+          "message": {
+            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The sample messages are clear, match the marketing use case, include the business name, and provide opt-out instructions. They reflect actual messages that would be sent under the campaign.\"}"
+          }
+        }
+      ]
+    }
+  }
+}

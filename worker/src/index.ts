@@ -1,10 +1,10 @@
 import { AutoRouter, cors, error, json, IRequest } from 'itty-router';
-import { Env, CallerContext, ErrorResponse } from './types';
+import type { Env, CallerContext, ErrorResponse } from './types';
 import { campaignInputSchema } from './validators/campaignInput';
 import { handlePreflight, withCors } from './middleware/cors';
 import { checkRateLimit } from './middleware/rateLimit';
 import { orchestrateScan } from './scanners/index';
-import { resolveModel } from './services/ai';
+import { createOpenRouterAiGateway, resolveModel } from './services/ai';
 import openapiSpec from '../openapi.yaml';
 
 const router = AutoRouter<IRequest, [Env]>();
@@ -89,8 +89,12 @@ async function handleScan(request: IRequest, env: Env, quickScan: boolean): Prom
     const requestedTier = request.headers.get('X-AI-Tier');
     const effectiveTier = authorizeTier(requestedTier, request, env, traceId);
     const model = resolveModel(effectiveTier);
+    const aiGateway = createOpenRouterAiGateway({
+      url: env.AI_GATEWAY_URL,
+      token: env.CF_AIG_TOKEN,
+    });
 
-    const result = await orchestrateScan(parsed.data, env, quickScan, traceId, model);
+    const result = await orchestrateScan(parsed.data, env, aiGateway, quickScan, traceId, model);
     return json(result);
   } catch (err) {
     console.error('Scan error:', err);
