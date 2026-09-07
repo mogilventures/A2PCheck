@@ -14,7 +14,7 @@ function requireCredentials(): { readonly url: string; readonly token: string } 
     ...(token ? [] : ['CF_AIG_TOKEN']),
   ];
 
-  if (missing.length > 0) {
+  if (!url || !token) {
     throw new Error(
       `Refusing to record AI fixtures before writes: missing ${missing.join(', ')}`
     );
@@ -37,7 +37,7 @@ async function atomicWriteFixture(scannerCase: AiScannerCase, exchange: Recorded
 async function main(): Promise<void> {
   // This guard intentionally runs before network calls, directory creation, or fixture writes.
   const config = requireCredentials();
-  const productionGateway = createOpenRouterAiGateway(config);
+  const productionGateway = createOpenRouterAiGateway(config, { signal: AbortSignal.timeout(10 * 60_000) });
 
   // Collection is deliberately sequential to avoid bursting a billable provider. It must
   // fully succeed before this command begins any fixture write.

@@ -18,7 +18,7 @@ export type AiScannerCase = {
   readonly expectedSeverity?: FieldIssue['severity'];
   readonly expectedEvidence: FieldResult['evidence']['source'];
   readonly expectedTwilioCode?: string;
-  readonly run: (gateway: AiGateway) => Promise<FieldResult>;
+  readonly run: (gateway: AiGateway, model?: string) => Promise<FieldResult>;
 };
 
 const compliantCampaign: ScanRequest = {
@@ -122,7 +122,7 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai',
-    run: (gateway) => scanDescription(compliantCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanDescription(compliantCampaign, gateway, model),
   },
   {
     scanner: 'description',
@@ -131,14 +131,14 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedSeverity: 'critical',
     expectedEvidence: 'ai',
     expectedTwilioCode: '30886',
-    run: (gateway) => scanDescription(vagueDescriptionCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanDescription(vagueDescriptionCampaign, gateway, model),
   },
   {
     scanner: 'sampleMessages',
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai',
-    run: (gateway) => scanSampleMessages(compliantCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanSampleMessages(compliantCampaign, gateway, model),
   },
   {
     scanner: 'sampleMessages',
@@ -147,14 +147,14 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedSeverity: 'critical',
     expectedEvidence: 'ai',
     expectedTwilioCode: '30893',
-    run: (gateway) => scanSampleMessages(deficientMessagesCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanSampleMessages(deficientMessagesCampaign, gateway, model),
   },
   {
     scanner: 'optIn',
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai',
-    run: (gateway) => scanOptIn(compliantCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanOptIn(compliantCampaign, gateway, model),
   },
   {
     scanner: 'optIn',
@@ -162,14 +162,14 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedTier: 'RED',
     expectedSeverity: 'critical',
     expectedEvidence: 'ai',
-    run: (gateway) => scanOptIn(smsOptInCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanOptIn(smsOptInCampaign, gateway, model),
   },
   {
     scanner: 'shaft',
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai',
-    run: (gateway) => scanShaft(compliantCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanShaft(compliantCampaign, gateway, model),
   },
   {
     scanner: 'shaft',
@@ -178,14 +178,14 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedSeverity: 'critical',
     expectedEvidence: 'ai',
     expectedTwilioCode: '30883',
-    run: (gateway) => scanShaft(prohibitedContentCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanShaft(prohibitedContentCampaign, gateway, model),
   },
   {
     scanner: 'affiliateMarketing',
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai',
-    run: (gateway) => scanAffiliateMarketing(compliantCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanAffiliateMarketing(compliantCampaign, gateway, model),
   },
   {
     scanner: 'affiliateMarketing',
@@ -193,14 +193,14 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedTier: 'RED',
     expectedSeverity: 'critical',
     expectedEvidence: 'ai',
-    run: (gateway) => scanAffiliateMarketing(affiliateCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanAffiliateMarketing(affiliateCampaign, gateway, model),
   },
   {
     scanner: 'consistency',
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai',
-    run: (gateway) => scanConsistency(compliantCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanConsistency(compliantCampaign, gateway, model),
   },
   {
     scanner: 'consistency',
@@ -208,14 +208,14 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedTier: 'RED',
     expectedSeverity: 'critical',
     expectedEvidence: 'ai',
-    run: (gateway) => scanConsistency(inconsistentCampaign, gateway, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanConsistency(inconsistentCampaign, gateway, model),
   },
   {
     scanner: 'privacyPolicy',
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai+firecrawl',
-    run: (gateway) => scanPrivacyPolicy(compliantCampaign, gateway, compliantCrawl, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanPrivacyPolicy(compliantCampaign, gateway, compliantCrawl, model),
   },
   {
     scanner: 'privacyPolicy',
@@ -223,14 +223,14 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedTier: 'YELLOW',
     expectedSeverity: 'warning',
     expectedEvidence: 'ai+firecrawl',
-    run: (gateway) => scanPrivacyPolicy(compliantCampaign, gateway, genericPrivacyCrawl, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanPrivacyPolicy(compliantCampaign, gateway, genericPrivacyCrawl, model),
   },
   {
     scanner: 'termsOfService',
     fixtureCase: 'happy',
     expectedTier: 'GREEN',
     expectedEvidence: 'ai+firecrawl',
-    run: (gateway) => scanTermsOfService(compliantCampaign, gateway, compliantTermsCrawl, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanTermsOfService(compliantCampaign, gateway, compliantTermsCrawl, model),
   },
   {
     scanner: 'termsOfService',
@@ -238,6 +238,6 @@ export const aiScannerCases: readonly AiScannerCase[] = [
     expectedTier: 'YELLOW',
     expectedSeverity: 'warning',
     expectedEvidence: 'ai+firecrawl',
-    run: (gateway) => scanTermsOfService(compliantCampaign, gateway, genericTermsCrawl, DEFAULT_MODEL),
+    run: (gateway, model = DEFAULT_MODEL) => scanTermsOfService(compliantCampaign, gateway, genericTermsCrawl, model),
   },
 ];

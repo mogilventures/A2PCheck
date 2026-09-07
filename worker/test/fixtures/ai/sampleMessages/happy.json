@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -25,7 +33,8 @@
         {
           "message": {
             "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The sample messages are clear, match the marketing use case, include the business name, and provide opt-out instructions. They reflect actual messages that would be sent under the campaign.\"}"
-          }
+          },
+          "finish_reason": "stop"
         }
       ]
     }

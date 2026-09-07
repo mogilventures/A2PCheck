@@ -65,6 +65,11 @@ describe('AI fixture recording collection', () => {
     expect(gateway.requests).toHaveLength(16);
   });
 
+  it('refuses to record a valid retry as if it were a first-attempt success', async () => {
+    const gateway = new SequenceAiGateway([malformedEnvelope, validResponse(0)]);
+    await expect(collectValidatedAiFixtures(gateway, aiScannerCases.slice(0, 1))).rejects.toThrow(/required a retry/);
+  });
+
   it('rejects without exposing a partial write set when the final provider exchange is invalid', async () => {
     const firstFifteen = aiScannerCases.slice(0, 15).map((_scannerCase, index) => validResponse(index));
     const gateway = new SequenceAiGateway([

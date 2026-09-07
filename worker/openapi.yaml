@@ -147,7 +147,14 @@ components:
       description: |
         Selects the AI model used for analysis. Defaults to `standard`
         (`openai/gpt-4o-mini`). `premium` (`anthropic/claude-sonnet-4-6`)
-        produces higher-quality analysis at higher cost and latency.
+        uses native JSON-schema output; both selected models use a 1,024-token
+        completion budget and temperature 0.1. Model-specific controls are
+        operator-owned, not configurable by API callers.
+
+        Inference is pinned to OpenAI for standard and Anthropic for premium,
+        without provider fallback. Requests disallow provider data collection
+        and opt out of AI Gateway logging/caching. Malformed or truncated model
+        output remains inconclusive; deterministic RED findings stay authoritative.
 
         `premium` requires an `Authorization: Bearer <PREMIUM_API_KEY>`
         header matching the operator's configured secret. Requests for

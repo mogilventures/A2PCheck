@@ -1,18 +1,26 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
-        "content": "You are an A2P 10DLC campaign compliance expert. Analyze a privacy policy page for SMS/messaging compliance.\n\nRULES:\n- Privacy policy should mention SMS, text messaging, or mobile messaging data collection\n- Should describe how messaging-related data (phone numbers, message content, opt-in records) is handled\n- Should mention sharing of data with third parties (especially messaging service providers)\n- Should cover data retention policies\n- A generic privacy policy that doesn't mention messaging at all = YELLOW\n- A privacy policy that explicitly covers messaging data = GREEN\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}"
+        "content": "You are an A2P 10DLC campaign compliance expert. Analyze a privacy policy page for SMS/messaging compliance.\n\nRULES:\n- Privacy policy should mention SMS, text messaging, or mobile messaging data collection\n- Should describe how messaging-related data (phone numbers, message content, opt-in records) is handled\n- Should mention sharing of data with third parties (especially messaging service providers)\n- Should cover data retention policies\n- A generic privacy policy that doesn't mention messaging at all = YELLOW, even when it is short. Missing messaging details alone are not a RED condition.\n- Do not infer that the page is missing or the content is truncated from its character count. HTTP/crawl failures are checked separately.\n- A privacy policy that explicitly covers messaging data = GREEN\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}"
       },
       {
         "role": "user",
-        "content": "Privacy policy URL: https://brightmarket.example/privacy\nBusiness name: BrightMarket\n\nPrivacy policy content (first 256 characters):\nBrightMarket SMS Privacy Policy. We collect phone numbers and consent timestamps only after explicit opt-in. We use messaging providers to deliver texts, retain consent records for compliance, and do not sell messaging data. Customers may request deletion."
+        "content": "Privacy policy URL: https://brightmarket.example/privacy\nBusiness name: BrightMarket\n\nRetrieved privacy policy content (256 characters):\nBrightMarket SMS Privacy Policy. We collect phone numbers and consent timestamps only after explicit opt-in. We use messaging providers to deliver texts, retain consent records for compliance, and do not sell messaging data. Customers may request deletion."
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\n  \"tier\": \"GREEN\",\n  \"issues\": [],\n  \"suggestions\": [],\n  \"rationale\": \"The privacy policy explicitly covers SMS and messaging data collection, describes how messaging-related data is handled, mentions sharing of data with messaging service providers, and outlines data retention policies.\"\n}"
-          }
+            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The privacy policy explicitly covers messaging data, including phone numbers, consent timestamps, and mentions the use of messaging providers. It also addresses data retention and customer rights regarding data deletion.\"}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }

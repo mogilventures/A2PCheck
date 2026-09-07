@@ -80,7 +80,8 @@ RULES:
 - Should describe how messaging-related data (phone numbers, message content, opt-in records) is handled
 - Should mention sharing of data with third parties (especially messaging service providers)
 - Should cover data retention policies
-- A generic privacy policy that doesn't mention messaging at all = YELLOW
+- A generic privacy policy that doesn't mention messaging at all = YELLOW, even when it is short. Missing messaging details alone are not a RED condition.
+- Do not infer that the page is missing or the content is truncated from its character count. HTTP/crawl failures are checked separately.
 - A privacy policy that explicitly covers messaging data = GREEN
 
 Respond with ONLY valid JSON:
@@ -91,7 +92,7 @@ Respond with ONLY valid JSON:
         content: `Privacy policy URL: ${input.privacyPolicyUrl}
 Business name: ${input.businessName || 'not provided'}
 
-Privacy policy content (first ${crawlResult.content.length} characters):
+Retrieved privacy policy content (${crawlResult.content.length} characters):
 ${crawlResult.content}`,
       },
     ],

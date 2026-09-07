@@ -65,7 +65,7 @@ function isPubliclyRoutableUrl(rawUrl: string): boolean {
   return true;
 }
 
-export async function scrapeUrl(url: string, env: Env): Promise<FirecrawlResult> {
+export async function scrapeUrl(url: string, env: Pick<Env, 'FIRECRAWL_API_KEY'>): Promise<FirecrawlResult> {
   if (!isPubliclyRoutableUrl(url)) {
     return {
       success: false,
@@ -149,7 +149,7 @@ export async function scrapeUrl(url: string, env: Env): Promise<FirecrawlResult>
 
 export async function crawlUrls(
   urls: { label: string; url: string }[],
-  env: Env
+  env: Pick<Env, 'FIRECRAWL_API_KEY'>
 ): Promise<Map<string, FirecrawlResult>> {
   const results = new Map<string, FirecrawlResult>();
   const settled = await Promise.allSettled(

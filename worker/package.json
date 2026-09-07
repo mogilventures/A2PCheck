@@ -7,14 +7,18 @@
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "fixtures:ai:record": "vite-node test/recordAiFixtures.ts"
+    "fixtures:ai:record": "vite-node test/recordAiFixtures.ts",
+    "eval:ai": "vite-node test/evaluateAiModels.ts",
+    "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json"
   },
   "dependencies": {
     "itty-router": "^5.0.18",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250313.0",
+    "@types/node": "^22.20.1",
     "typescript": "^5.7.3",
     "vite-node": "^3.2.4",
     "vitest": "^3.0.9",

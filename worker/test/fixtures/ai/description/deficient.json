@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\"tier\": \"RED\", \"issues\": [\"Description is vague and generic, failing to explain the campaign's purpose and objectives.\"], \"suggestions\": [\"Provide a detailed explanation of the specific marketing messages that will be sent, such as promotions, product announcements, or event notifications. Include the target audience and the value proposition for recipients.\"], \"rationale\": \"The description does not meet the requirements as it lacks detail and clarity about the campaign's purpose, message types, target audience, and value proposition.\"}"
-          }
+            "content": "{\"tier\": \"RED\", \"issues\": [\"Description is too vague and generic.\", \"Does not explain the campaign's purpose or objective.\", \"Does not describe the type of messages that will be sent.\", \"Does not mention the target audience.\", \"Does not explain the value proposition to message recipients.\"], \"suggestions\": [\"Provide a detailed explanation of the marketing campaign's goals.\", \"Describe the specific types of marketing messages that will be sent (e.g., promotions, product updates).\", \"Identify the target audience for the messages.\", \"Explain the value or benefits that recipients will gain from these messages.\"], \"rationale\": \"The description fails to meet the guidelines as it lacks detail and clarity regarding the campaign's purpose and objectives.\"}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }

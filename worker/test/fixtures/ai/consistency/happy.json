@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\n  \"tier\": \"GREEN\",\n  \"issues\": [],\n  \"suggestions\": [],\n  \"rationale\": \"All fields are consistent. The use case of MARKETING aligns with the campaign description, which accurately reflects the purpose of sending promotional messages. The sample messages identify the business name, match the declared purpose, and the opt-in flow is consistent with the message content. Content flags are correctly applied to the embedded links.\"\n}"
-          }
+            "content": "{\n  \"tier\": \"GREEN\",\n  \"issues\": [],\n  \"suggestions\": [],\n  \"rationale\": \"All fields are consistent. The use case of MARKETING aligns with the campaign description, which accurately reflects the purpose of sending promotional messages. The sample messages identify BrightMarket and match the declared purpose of sending offers. The opt-in flow is clear and matches the message content, and the content flags are correctly applied to the actual content.\"\n}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }
