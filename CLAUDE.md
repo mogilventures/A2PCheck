@@ -21,6 +21,8 @@ npm run dev       # Start Wrangler dev server
 npm run deploy    # Deploy to Cloudflare
 npm test                    # Run all offline Vitest tests
 npm run test:watch
+npm run typecheck           # Production source plus test/evaluation TypeScript
+npm run eval:ai -- --model z-ai/glm-5.3-flash --output /tmp/a2p-evaluation.json # Billable; env required
 npm run fixtures:ai:record  # Billable/networked; sequentially refresh AI replay fixtures
 ```
 
@@ -52,5 +54,10 @@ AI_GATEWAY_URL='https://…' CF_AIG_TOKEN='…' npm run fixtures:ai:record
 ```
 
 The command runs sequentially with the standard model, validates the provider envelope and scanner result schema, and atomically overwrites each fixture. It refuses to write anything if either credential is absent. Fixtures contain only synthetic campaign content and the minimum replay envelope; never add secrets or provider metadata.
+
+Recording also rejects a successful retry: fixtures must not hide first-attempt
+schema failures. See `worker/docs/model-evaluation.md` for the provider-pinned
+synthetic bake-off, model request controls, and release gates. Never switch a model
+or widen provider routing solely because it is available in a catalog.
 
 GitHub issue #8 supersedes the earlier fixture-testing request in #5.

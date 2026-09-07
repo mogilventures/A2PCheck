@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The campaign description clearly explains the purpose and objective of the campaign, detailing that it sends weekly product offers and seasonal discounts. It specifies that messages are sent to customers who have explicitly consented, identifies the sender, and highlights the value proposition of helping customers save on products they are interested in.\"}"
-          }
+            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The description clearly explains the campaign's purpose and objective, describes the type of messages sent, identifies the target audience, and outlines the value proposition for recipients.\"}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }

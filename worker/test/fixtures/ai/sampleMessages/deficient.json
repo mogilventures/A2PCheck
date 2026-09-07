@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\"tier\": \"RED\", \"issues\": [\"Messages are generic and do not include the business name.\", \"Messages do not reflect actual content that would be sent under the campaign.\", \"Messages lack opt-out instructions.\"], \"suggestions\": [\"Include the business name in the messages.\", \"Provide specific product offers or discounts in the messages.\", \"Add opt-out instructions to at least one message.\"], \"rationale\": \"The sample messages do not align with the marketing use case as they are too vague and do not represent actual offers or include necessary compliance elements.\"}"
-          }
+            "content": "{\"tier\": \"RED\", \"issues\": [\"Messages are generic and do not include the business name.\", \"Messages do not reflect actual content that would be sent under the campaign.\", \"Messages lack opt-out instructions.\"], \"suggestions\": [\"Include the business name in the messages.\", \"Provide specific product offers or seasonal discounts in the messages.\", \"Add opt-out instructions to at least one message.\"], \"rationale\": \"The sample messages do not meet the requirements for clarity, specificity, and compliance with the campaign use case.\"}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }

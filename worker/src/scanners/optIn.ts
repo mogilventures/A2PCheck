@@ -22,6 +22,8 @@ RULES (from Twilio/TCR guidelines):
 - Must describe what happens after opt-in (what messages they'll receive, frequency)
 - Implied consent or pre-checked boxes are not acceptable
 - Must be verifiable — there should be a record of consent
+- Check the entire disclosure and confirmation message before reporting omissions. Never claim a detail is missing when it is explicitly supplied, including inside quoted disclosure text.
+- Judge the described initial consent method. Configured management or re-subscription keywords alone do not prove that initial consent is obtained by SMS.
 
 Respond with ONLY valid JSON:
 {"tier": "RED|YELLOW|GREEN", "issues": ["..."], "suggestions": ["..."], "rationale": "..."}

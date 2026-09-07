@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ZodSchema } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 
 /** A chat message accepted by the configured AI provider. */
 export interface AiMessage {
@@ -7,13 +8,60 @@ export interface AiMessage {
   readonly content: string;
 }
 
-/** The stable provider request assembled by the AI analysis service. */
-export interface AiCompletionRequest {
-  readonly model: string;
+const providerRestrictions = {
+  allow_fallbacks: false,
+  require_parameters: true,
+  data_collection: 'deny',
+} as const;
+
+// Model and required controls travel together. Adding a model requires an explicit
+// hosting decision; OpenRouter must not silently choose another inference provider.
+const modelPolicies = [
+  { model: 'openai/gpt-4o-mini', temperature: 0.1,
+    provider: { ...providerRestrictions, only: ['openai'] } },
+  { model: 'anthropic/claude-sonnet-4-6', temperature: 0.1,
+    provider: { ...providerRestrictions, only: ['anthropic'] } },
+  { model: 'z-ai/glm-5.3-flash', temperature: 0.1, reasoning_effort: 'low',
+    provider: { ...providerRestrictions, only: ['cloudflare'] } },
+  // Opus 4.8 does not support temperature on the direct Anthropic endpoint.
+  { model: 'anthropic/claude-opus-4.8', reasoning_effort: 'low',
+    provider: { ...providerRestrictions, only: ['anthropic'] } },
+] as const;
+
+/** Models with an explicit, provider-pinned request policy; not all are selected tiers. */
+export type AiModel = (typeof modelPolicies)[number]['model'];
+
+/** The stable request, including controls required by the selected model. */
+export type AiCompletionRequest = (typeof modelPolicies)[number] & {
   readonly messages: readonly AiMessage[];
   readonly max_tokens: 1024;
-  readonly temperature: 0.1;
-  readonly response_format: { readonly type: 'json_object' };
+  readonly response_format: { readonly type: 'json_object' } | {
+    readonly type: 'json_schema';
+    readonly json_schema: {
+      readonly name: 'scan_result';
+      readonly strict: true;
+      readonly schema: ReturnType<typeof zodToJsonSchema>;
+    };
+  };
+};
+
+/** Build a policy-complete request, or reject an unevaluated/unknown model identifier. */
+export function createAiCompletionRequest(
+  messages: readonly AiMessage[],
+  model: string,
+  schema: ZodSchema = aiResultSchema,
+): AiCompletionRequest | null {
+  const policy = modelPolicies.find((candidate) => candidate.model === model);
+  if (policy === undefined) return null;
+  if (policy.model === 'anthropic/claude-sonnet-4-6' || policy.model === 'anthropic/claude-opus-4.8') {
+    // Claude's JSON-object mode returned fenced Markdown in the live bake-off.
+    // Derive its native constrained output schema from the same runtime parser.
+    const { $schema: _dialect, ...jsonSchema } = zodToJsonSchema(schema, { $refStrategy: 'none' });
+    return { ...policy, messages, max_tokens: 1024,
+      response_format: { type: 'json_schema', json_schema: { name: 'scan_result', strict: true, schema: jsonSchema } },
+    };
+  }
+  return { ...policy, messages, max_tokens: 1024, response_format: { type: 'json_object' } };
 }
 
 /** The transport-level provider response consumed by the AI analysis service. */
@@ -34,10 +82,11 @@ export interface OpenRouterAiGatewayConfig {
   readonly token: string;
 }
 
+/** Selected tiers remain unchanged until the gateway bake-off supports a cutover. */
 export const MODELS = {
   standard: 'openai/gpt-4o-mini',
   premium: 'anthropic/claude-sonnet-4-6',
-} as const;
+} as const satisfies Record<'standard' | 'premium', AiModel>;
 
 export type AiTier = keyof typeof MODELS;
 
@@ -49,20 +98,21 @@ const aiGatewayEnvelopeSchema = z.object({
       message: z.object({
         content: z.string(),
       }),
+      finish_reason: z.literal('stop').optional(),
     })
   ).min(1),
 });
 
 /** Resolves an authorized model tier, defaulting unknown values to the standard model. */
-export function resolveModel(tier: string | null | undefined): string {
-  if (tier && tier in MODELS) {
-    return MODELS[tier as AiTier];
-  }
-  return DEFAULT_MODEL;
+export function resolveModel(tier: string | null | undefined): AiModel {
+  return tier === 'premium' ? MODELS.premium : MODELS.standard;
 }
 
 /** Creates the production adapter for an OpenRouter-compatible Cloudflare AI Gateway endpoint. */
-export function createOpenRouterAiGateway(config: OpenRouterAiGatewayConfig): AiGateway {
+export function createOpenRouterAiGateway(
+  config: OpenRouterAiGatewayConfig,
+  options: { readonly signal?: AbortSignal } = {},
+): AiGateway {
   return {
     async complete(request: AiCompletionRequest): Promise<AiGatewayResponse> {
       const response = await fetch(config.url, {
@@ -70,8 +120,11 @@ export function createOpenRouterAiGateway(config: OpenRouterAiGatewayConfig): Ai
         headers: {
           'Content-Type': 'application/json',
           'cf-aig-authorization': `Bearer ${config.token}`,
+          'cf-aig-collect-log': 'false',
+          'cf-aig-skip-cache': 'true',
         },
         body: JSON.stringify(request),
+        signal: options.signal,
       });
 
       if (!response.ok) {
@@ -95,13 +148,8 @@ export async function runAiAnalysis<T>(
   model: string = DEFAULT_MODEL,
   retries = 1
 ): Promise<T | null> {
-  const request: AiCompletionRequest = {
-    model,
-    messages,
-    max_tokens: 1024,
-    temperature: 0.1,
-    response_format: { type: 'json_object' },
-  };
+  const request = createAiCompletionRequest(messages, model, schema);
+  if (request === null) return null;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {

@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\n  \"tier\": \"RED\",\n  \"issues\": [\n    \"Sample message is an OTP code, which does not match the MARKETING use case.\",\n    \"Description indicates sending retail discounts, but sample message does not reflect this.\"\n  ],\n  \"suggestions\": [\n    \"Revise sample messages to include promotional content related to retail discounts.\",\n    \"Ensure that the messaging aligns with the declared purpose of the campaign.\"\n  ],\n  \"rationale\": \"The sample message provided is inconsistent with the declared use case of MARKETING, as it is an OTP code rather than a promotional message. This represents a major inconsistency that needs to be addressed.\"\n}"
-          }
+            "content": "{\n  \"tier\": \"RED\",\n  \"issues\": [\n    \"Sample message is an OTP code which does not match the MARKETING use case.\",\n    \"Description indicates sending retail discounts, but sample message does not reflect this.\"\n  ],\n  \"suggestions\": [\n    \"Revise sample messages to include promotional content related to retail discounts.\",\n    \"Ensure that the messaging aligns with the declared marketing purpose.\"\n  ],\n  \"rationale\": \"The sample message provided is inconsistent with the declared marketing use case and description, indicating a major compliance issue.\"\n}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }

@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\n  \"tier\": \"RED\",\n  \"issues\": [\n    \"Sharing collected opt-ins with partner brands\",\n    \"Sending promotions for unrelated third-party businesses\"\n  ],\n  \"suggestions\": [\n    \"Cease sharing opt-ins with third parties\",\n    \"Focus on single-brand marketing without third-party promotions\"\n  ],\n  \"rationale\": \"The campaign involves sharing opt-ins with partner brands and promoting unrelated third-party businesses, which violates A2P 10DLC compliance rules regarding affiliate marketing.\"\n}"
-          }
+            "content": "{\n  \"tier\": \"RED\",\n  \"issues\": [\n    \"Sharing collected opt-ins with partner brands\",\n    \"Sending promotions for unrelated third-party businesses\"\n  ],\n  \"suggestions\": [\n    \"Limit messaging to single-brand promotions\",\n    \"Avoid sharing opt-in data with third parties\"\n  ],\n  \"rationale\": \"The campaign involves sharing opt-ins with partner brands and promoting unrelated third-party businesses, which violates A2P 10DLC compliance rules regarding affiliate marketing.\"\n}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }

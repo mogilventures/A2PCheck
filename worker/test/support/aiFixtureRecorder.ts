@@ -21,10 +21,12 @@ export type PendingAiFixtureWrite = {
 
 class CapturingValidatedGateway implements AiGateway {
   readonly exchanges: RecordedExchange[] = [];
+  attempts = 0;
 
   constructor(private readonly productionGateway: AiGateway) {}
 
   async complete(request: AiCompletionRequest): Promise<AiGatewayResponse> {
+    this.attempts += 1;
     const response = await this.productionGateway.complete(request);
     const parsedResponse = recordableAiGatewayResponseSchema.parse(response);
     const content = parsedResponse.body.choices[0]?.message.content;
@@ -39,7 +41,9 @@ class CapturingValidatedGateway implements AiGateway {
       ok: true,
       status: parsedResponse.status,
       body: {
-        choices: [{ message: { content } }],
+        choices: [{ message: { content },
+          ...(parsedResponse.body.choices[0]?.finish_reason === undefined ? {} : { finish_reason: 'stop' as const }),
+        }],
       },
     };
     this.exchanges.push({ request, response: sanitizedResponse });
@@ -95,6 +99,9 @@ export async function collectValidatedAiFixtures(
       throw new Error(
         `${scannerCase.scanner}/${scannerCase.fixtureCase} produced ${gateway.exchanges.length} valid exchanges; expected exactly one`
       );
+    }
+    if (gateway.attempts !== 1) {
+      throw new Error(`${scannerCase.scanner}/${scannerCase.fixtureCase} required a retry; refusing to hide first-attempt failure`);
     }
     const exchange = gateway.exchanges[0];
     if (exchange === undefined) {

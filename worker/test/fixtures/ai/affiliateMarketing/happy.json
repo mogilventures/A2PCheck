@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -25,7 +33,8 @@
         {
           "message": {
             "content": "{\n  \"tier\": \"GREEN\",\n  \"issues\": [],\n  \"suggestions\": [],\n  \"rationale\": \"The campaign clearly identifies BrightMarket as the sender, promotes offers directly related to the business, and has a transparent opt-in process with explicit consent from customers. There are no signs of affiliate marketing or shared opt-in lists.\"\n}"
-          }
+          },
+          "finish_reason": "stop"
         }
       ]
     }

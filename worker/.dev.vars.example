@@ -5,7 +5,7 @@
 FIRECRAWL_API_KEY=fc-your-key-here
 
 # Cloudflare AI Gateway URL (set in CF dashboard for production)
-AI_GATEWAY_URL=https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-name>/openrouter/v1/chat/completions
+AI_GATEWAY_URL=https://gateway.ai.cloudflare.com/v1/<account-id>/<gateway-name>/openrouter/chat/completions
 
 # Cloudflare AI Gateway token (set via wrangler secret put CF_AIG_TOKEN)
 CF_AIG_TOKEN=your-cf-aig-token-here

@@ -1,10 +1,19 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
-        "content": "You are an A2P 10DLC campaign compliance expert. Analyze opt-in/consent flow for compliance.\n\nRULES (from Twilio/TCR guidelines):\n- Opt-in must be EXPLICIT — users must affirmatively consent to receive messages\n- Opt-in cannot happen via SMS itself (e.g., \"Text YES to subscribe\" is not valid for initial opt-in)\n- Valid opt-in methods: website form, paper form, IVR, point-of-sale\n- The message flow must clearly describe HOW users opt in\n- Must describe what happens after opt-in (what messages they'll receive, frequency)\n- Implied consent or pre-checked boxes are not acceptable\n- Must be verifiable — there should be a record of consent\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}\n\n- RED: Opt-in is via SMS, not explicit, or not described\n- YELLOW: Opt-in described but missing details\n- GREEN: Clear, explicit, verifiable opt-in flow"
+        "content": "You are an A2P 10DLC campaign compliance expert. Analyze opt-in/consent flow for compliance.\n\nRULES (from Twilio/TCR guidelines):\n- Opt-in must be EXPLICIT — users must affirmatively consent to receive messages\n- Opt-in cannot happen via SMS itself (e.g., \"Text YES to subscribe\" is not valid for initial opt-in)\n- Valid opt-in methods: website form, paper form, IVR, point-of-sale\n- The message flow must clearly describe HOW users opt in\n- Must describe what happens after opt-in (what messages they'll receive, frequency)\n- Implied consent or pre-checked boxes are not acceptable\n- Must be verifiable — there should be a record of consent\n- Check the entire disclosure and confirmation message before reporting omissions. Never claim a detail is missing when it is explicitly supplied, including inside quoted disclosure text.\n- Judge the described initial consent method. Configured management or re-subscription keywords alone do not prove that initial consent is obtained by SMS.\n\nRespond with ONLY valid JSON:\n{\"tier\": \"RED|YELLOW|GREEN\", \"issues\": [\"...\"], \"suggestions\": [\"...\"], \"rationale\": \"...\"}\n\n- RED: Opt-in is via SMS, not explicit, or not described\n- YELLOW: Opt-in described but missing details\n- GREEN: Clear, explicit, verifiable opt-in flow"
       },
       {
         "role": "user",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The opt-in flow is clear, explicit, and verifiable. Customers must affirmatively check an unchecked box to consent, which meets the requirement for explicit consent. The message clearly describes the frequency of messages and provides opt-out instructions. Additionally, the retention of consent records ensures compliance.\"}"
-          }
+            "content": "{\"tier\": \"GREEN\", \"issues\": [], \"suggestions\": [], \"rationale\": \"The opt-in flow is clear and explicit, as customers must affirmatively check an unchecked-by-default box to consent. The disclosure provides necessary information about the frequency of messages and the option to opt out. Additionally, the retention of the disclosure version, timestamp, page URL, and consent record ensures verifiability.\"}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }

@@ -27,7 +27,7 @@ const GLOBAL_TIMEOUT_MS = 45000;
 
 export async function orchestrateScan(
   input: CampaignInput,
-  env: Env,
+  env: Pick<Env, 'FIRECRAWL_API_KEY' | 'RULES_VERSION'>,
   aiGateway: AiGateway,
   quickScan: boolean,
   traceId: string,
@@ -242,6 +242,13 @@ async function wrapScanner(
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   if (ms <= 0) return null;
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), ms));
-  return Promise.race([promise, timeout]);
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timeoutId = setTimeout(() => resolve(null), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
 }

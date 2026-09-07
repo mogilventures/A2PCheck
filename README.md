@@ -80,6 +80,8 @@ See `worker/.dev.vars.example` and `worker/wrangler.toml.example` for full detai
 ## Contributing and AI fixtures
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for offline testing and the explicit, billable command that sequentially refreshes request-bound AI scanner fixtures.
+See [model evaluation](worker/docs/model-evaluation.md) for provider restrictions,
+model-specific decoding controls, and the synthetic gateway bake-off.
 
 ## API
 

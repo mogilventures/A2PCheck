@@ -1,6 +1,15 @@
 {
   "request": {
     "model": "openai/gpt-4o-mini",
+    "temperature": 0.1,
+    "provider": {
+      "allow_fallbacks": false,
+      "require_parameters": true,
+      "data_collection": "deny",
+      "only": [
+        "openai"
+      ]
+    },
     "messages": [
       {
         "role": "system",
@@ -12,7 +21,6 @@
       }
     ],
     "max_tokens": 1024,
-    "temperature": 0.1,
     "response_format": {
       "type": "json_object"
     }
@@ -24,8 +32,9 @@
       "choices": [
         {
           "message": {
-            "content": "{\"tier\": \"YELLOW\", \"issues\": [\"No mention of SMS/text messaging terms\", \"No description of messaging frequency\", \"No mention of costs associated with messaging\", \"No opt-out procedures provided\", \"No indication that message and data rates may apply\"], \"suggestions\": [\"Include specific terms related to SMS/text messaging\", \"Outline messaging frequency and costs\", \"Provide clear opt-out procedures for users\", \"Mention that message and data rates may apply\"], \"rationale\": \"The terms of service do not address any aspects related to SMS or text messaging, which is essential for compliance.\"}"
-          }
+            "content": "{\"tier\": \"YELLOW\", \"issues\": [\"No mention of SMS/text messaging terms\", \"No description of messaging frequency\", \"No mention of costs associated with messaging\", \"No opt-out procedures provided\", \"No indication that message and data rates may apply\"], \"suggestions\": [\"Include specific terms related to SMS/text messaging\", \"Outline messaging frequency and costs\", \"Provide clear opt-out procedures for users\", \"State that message and data rates may apply\"], \"rationale\": \"The terms of service do not address any aspects of SMS or text messaging, which is essential for compliance with A2P 10DLC regulations.\"}"
+          },
+          "finish_reason": "stop"
         }
       ]
     }
