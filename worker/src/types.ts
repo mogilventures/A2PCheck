@@ -1,3 +1,5 @@
+import type { RevisionPack } from './services/revisionPack';
+
 export type ScanTier = 'RED' | 'YELLOW' | 'GREEN';
 
 export interface ScanRequest {
@@ -76,6 +78,8 @@ export interface ScanResponse {
   warnings: Warning[];
   fieldResults: FieldResult[];
   metadata: ScanMetadata;
+  /** Only Full scans carry pack status; exact replacements always require human review. */
+  revisionPack?: RevisionPack;
 }
 
 export interface ErrorDetail {

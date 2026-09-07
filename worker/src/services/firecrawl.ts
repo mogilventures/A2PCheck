@@ -1,4 +1,14 @@
-import { Env } from '../types';
+import { z } from 'zod';
+
+/** Page retrieval seam; every request belongs to the caller's cancellation lifetime. */
+export interface PageCrawler {
+  scrape(url: string, options: { readonly signal: AbortSignal }): Promise<FirecrawlResult>;
+}
+
+/** Constructs the external Firecrawl adapter at the HTTP composition boundary. */
+export function createFirecrawlCrawler(apiKey: string): PageCrawler {
+  return { scrape: (url, options) => scrapeUrl(url, apiKey, options) };
+}
 
 export interface FirecrawlResult {
   success: boolean;
@@ -65,7 +75,7 @@ function isPubliclyRoutableUrl(rawUrl: string): boolean {
   return true;
 }
 
-export async function scrapeUrl(url: string, env: Pick<Env, 'FIRECRAWL_API_KEY'>): Promise<FirecrawlResult> {
+async function scrapeUrl(url: string, apiKey: string, options: { readonly signal: AbortSignal }): Promise<FirecrawlResult> {
   if (!isPubliclyRoutableUrl(url)) {
     return {
       success: false,
@@ -77,22 +87,22 @@ export async function scrapeUrl(url: string, env: Pick<Env, 'FIRECRAWL_API_KEY'>
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const signal = AbortSignal.any([options.signal, controller.signal]);
 
   try {
+    signal.throwIfAborted();
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.FIRECRAWL_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         url,
         formats: ['markdown'],
       }),
-      signal: controller.signal,
+      signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const status = response.status;
@@ -100,41 +110,38 @@ export async function scrapeUrl(url: string, env: Pick<Env, 'FIRECRAWL_API_KEY'>
         success: false,
         content: '',
         statusCode: status,
-        error: `HTTP ${status}: ${response.statusText}`,
+        error: `Page retrieval failed (HTTP ${status})`,
       };
     }
 
-    const data = (await response.json()) as {
-      success: boolean;
-      data?: { markdown?: string };
-      error?: string;
-    };
+    const parsed = z.object({
+      success: z.boolean(),
+      data: z.object({ markdown: z.string().optional() }).optional(),
+    }).safeParse(await response.json());
 
-    if (!data.success) {
+    if (!parsed.success || !parsed.data.success) {
       return {
         success: false,
         content: '',
         statusCode: 200,
-        error: data.error || 'Firecrawl returned unsuccessful response',
+        error: 'Page retrieval returned an invalid or unsuccessful response',
       };
     }
 
-    const content = (data.data?.markdown || '').slice(0, MAX_CONTENT_LENGTH);
+    const content = (parsed.data.data?.markdown ?? '').slice(0, MAX_CONTENT_LENGTH);
 
     return {
       success: true,
       content,
       statusCode: 200,
     };
-  } catch (err: unknown) {
-    clearTimeout(timeoutId);
-
-    if (err instanceof Error && err.name === 'AbortError') {
+  } catch {
+    if (signal.aborted) {
       return {
         success: false,
         content: '',
         statusCode: 0,
-        error: 'Request timed out after 15 seconds',
+        error: 'Page retrieval cancelled or timed out',
       };
     }
 
@@ -142,35 +149,9 @@ export async function scrapeUrl(url: string, env: Pick<Env, 'FIRECRAWL_API_KEY'>
       success: false,
       content: '',
       statusCode: 0,
-      error: err instanceof Error ? err.message : 'Unknown error',
+      error: 'Page retrieval failed',
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
-}
-
-export async function crawlUrls(
-  urls: { label: string; url: string }[],
-  env: Pick<Env, 'FIRECRAWL_API_KEY'>
-): Promise<Map<string, FirecrawlResult>> {
-  const results = new Map<string, FirecrawlResult>();
-  const settled = await Promise.allSettled(
-    urls.map(async ({ label, url }) => {
-      const result = await scrapeUrl(url, env);
-      return { label, result };
-    })
-  );
-
-  for (const entry of settled) {
-    if (entry.status === 'fulfilled') {
-      results.set(entry.value.label, entry.value.result);
-    } else {
-      results.set('unknown', {
-        success: false,
-        content: '',
-        statusCode: 0,
-        error: 'Promise rejected',
-      });
-    }
-  }
-
-  return results;
 }

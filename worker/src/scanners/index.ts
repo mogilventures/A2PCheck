@@ -1,254 +1,146 @@
-import type { ScanRequest, ScanResponse, FieldResult, Env, ScanTier } from '../types';
+import type { ScanResponse, FieldResult, ScanTier } from '../types';
 import type { CampaignInput } from '../validators/campaignInput';
 import { rollupResults } from '../scoring/rollup';
-import { crawlUrls } from '../services/firecrawl';
-import type { FirecrawlResult } from '../services/firecrawl';
+import type { FirecrawlResult, PageCrawler } from '../services/firecrawl';
+import { MODELS } from '../services/ai';
 import type { AiGateway } from '../services/ai';
-
-// Deterministic scanners
+import { createRevisionPack } from '../services/revisionPack';
+import type { RevisionPack } from '../services/revisionPack';
 import { scanUrls } from './urls';
 import { scanOptOut } from './optOut';
 import { scanHelpKeywords } from './helpKeywords';
 import { scanContentFlags } from './contentFlags';
-
-// AI scanners
 import { scanDescription } from './description';
 import { scanSampleMessages } from './sampleMessages';
 import { scanOptIn } from './optIn';
 import { scanShaft } from './shaft';
 import { scanAffiliateMarketing } from './affiliateMarketing';
 import { scanConsistency } from './consistency';
-
-// Firecrawl-dependent scanners
 import { scanPrivacyPolicy, scanPrivacyPolicyQuick } from './privacyPolicy';
 import { scanTermsOfService, scanTermsOfServiceQuick } from './termsOfService';
 
 const GLOBAL_TIMEOUT_MS = 45000;
 
+/** Runs independent checks and optional premium synthesis within one owned deadline. */
 export async function orchestrateScan(
   input: CampaignInput,
-  env: Pick<Env, 'FIRECRAWL_API_KEY' | 'RULES_VERSION'>,
+  config: { readonly RULES_VERSION: string },
   aiGateway: AiGateway,
   quickScan: boolean,
   traceId: string,
-  model: string
+  model: string,
+  options: { readonly signal?: AbortSignal; readonly crawler?: PageCrawler } = {},
 ): Promise<ScanResponse> {
   const startTime = Date.now();
-  const fieldResults: FieldResult[] = [];
-  const urlsCrawled: string[] = [];
-
-  // --- Phase 1: Deterministic checks (instant) ---
-  fieldResults.push(scanUrls(input as ScanRequest));
-  fieldResults.push(scanOptOut(input as ScanRequest));
-  fieldResults.push(scanHelpKeywords(input as ScanRequest));
-  fieldResults.push(scanContentFlags(input as ScanRequest));
-
-  // --- Phase 2a: Parallel AI + Firecrawl ---
-  const phase2aPromises: Promise<FieldResult>[] = [
-    wrapScanner(() => scanDescription(input as ScanRequest, aiGateway, model), 'campaignDescription', 'Campaign Description'),
-    wrapScanner(() => scanSampleMessages(input as ScanRequest, aiGateway, model), 'sampleMessages', 'Sample Messages'),
-    wrapScanner(() => scanOptIn(input as ScanRequest, aiGateway, model), 'messageFlow', 'Opt-In / Consent Flow'),
-    wrapScanner(() => scanShaft(input as ScanRequest, aiGateway, model), 'shaftContent', 'SHAFT Content Check'),
-    wrapScanner(
-      () => scanAffiliateMarketing(input as ScanRequest, aiGateway, model),
-      'affiliateMarketing',
-      'Affiliate Marketing Check'
-    ),
-  ];
-
-  // Firecrawl URLs (parallel, only for full scan)
-  let crawlResults: Map<string, FirecrawlResult> | undefined;
-
-  if (!quickScan) {
-    const urlsToCrawl: { label: string; url: string }[] = [];
-    if (input.privacyPolicyUrl) {
-      urlsToCrawl.push({ label: 'privacyPolicy', url: input.privacyPolicyUrl });
-      urlsCrawled.push(input.privacyPolicyUrl);
-    }
-    if (input.termsOfServiceUrl) {
-      urlsToCrawl.push({ label: 'termsOfService', url: input.termsOfServiceUrl });
-      urlsCrawled.push(input.termsOfServiceUrl);
-    }
-    if (input.websiteUrl) {
-      urlsToCrawl.push({ label: 'website', url: input.websiteUrl });
-      urlsCrawled.push(input.websiteUrl);
-    }
-
-    if (urlsToCrawl.length > 0) {
-      const crawlPromise = crawlUrls(urlsToCrawl, env);
-
-      // Run AI scanners and crawl in parallel
-      const [aiResults, crawled] = await Promise.all([
-        withTimeout(Promise.allSettled(phase2aPromises), GLOBAL_TIMEOUT_MS - (Date.now() - startTime)),
-        withTimeout(crawlPromise, GLOBAL_TIMEOUT_MS - (Date.now() - startTime)),
-      ]);
-
-      // Collect phase 2a results
-      if (aiResults) {
-        for (const result of aiResults) {
-          if (result.status === 'fulfilled') {
-            fieldResults.push(result.value);
-          }
-        }
-      }
-
-      crawlResults = crawled ?? undefined;
-    } else {
-      // No URLs to crawl, just run AI scanners
-      const aiResults = await withTimeout(
-        Promise.allSettled(phase2aPromises),
-        GLOBAL_TIMEOUT_MS - (Date.now() - startTime)
-      );
-      if (aiResults) {
-        for (const result of aiResults) {
-          if (result.status === 'fulfilled') {
-            fieldResults.push(result.value);
-          }
-        }
-      }
-    }
-  } else {
-    // Quick scan: run AI scanners only
-    const aiResults = await withTimeout(
-      Promise.allSettled(phase2aPromises),
-      GLOBAL_TIMEOUT_MS - (Date.now() - startTime)
-    );
-    if (aiResults) {
-      for (const result of aiResults) {
-        if (result.status === 'fulfilled') {
-          fieldResults.push(result.value);
-        }
-      }
-    }
-  }
-
-  // --- Phase 2b: Firecrawl-dependent scanners ---
-  if (quickScan) {
-    fieldResults.push(scanPrivacyPolicyQuick());
-    fieldResults.push(scanTermsOfServiceQuick());
-  } else {
-    const phase2bPromises: Promise<FieldResult>[] = [
-      wrapScanner(
-        () => scanPrivacyPolicy(input as ScanRequest, aiGateway, crawlResults?.get('privacyPolicy'), model),
-        'privacyPolicy',
-        'Privacy Policy'
-      ),
-      wrapScanner(
-        () => scanTermsOfService(input as ScanRequest, aiGateway, crawlResults?.get('termsOfService'), model),
-        'termsOfService',
-        'Terms of Service'
-      ),
-    ];
-
-    // Consistency check uses all data
-    phase2bPromises.push(
-      wrapScanner(() => scanConsistency(input as ScanRequest, aiGateway, model), 'consistency', 'Cross-Field Consistency')
-    );
-
-    const phase2bResults = await withTimeout(
-      Promise.allSettled(phase2bPromises),
-      GLOBAL_TIMEOUT_MS - (Date.now() - startTime)
-    );
-
-    if (phase2bResults) {
-      for (const result of phase2bResults) {
-        if (result.status === 'fulfilled') {
-          fieldResults.push(result.value);
-        }
-      }
-    }
-  }
-
-  // --- Phase 3: Scoring rollup ---
-  // Deduplicate: if deterministic scanner already flagged a field as RED,
-  // ensure AI can't downgrade it
-  const deduped = deduplicateFieldResults(fieldResults);
-  const { overallTier, overallSummary, criticalIssues, warnings } = rollupResults(deduped);
-
-  const scanDurationMs = Date.now() - startTime;
-
-  return {
-    scanId: traceId,
-    timestamp: new Date().toISOString(),
-    rulesVersion: env.RULES_VERSION,
-    overallTier,
-    overallSummary,
-    criticalIssues,
-    warnings,
-    fieldResults: deduped,
-    metadata: {
-      scanDurationMs,
-      fieldsAnalyzed: deduped.length,
-      aiModel: model,
-      urlsCrawled,
-      quickScan: quickScan || undefined,
-      partial: scanDurationMs > GLOBAL_TIMEOUT_MS ? true : undefined,
-    },
+  const deadline = new AbortController();
+  const timeout = setTimeout(() => deadline.abort(), GLOBAL_TIMEOUT_MS);
+  const signal = options.signal ? AbortSignal.any([options.signal, deadline.signal]) : deadline.signal;
+  // Bind the caller-owned lifetime once, including scanner retries and synthesis.
+  const gateway: AiGateway = {
+    complete: (request) => signal.aborted
+      ? Promise.resolve({ ok: false, status: 408, body: null })
+      : aiGateway.complete(request, { signal }),
   };
+  const urlsCrawled: string[] = [];
+  let incomplete = false;
+  const check = async (field: string, displayName: string, run: () => Promise<FieldResult>): Promise<FieldResult> => {
+    const result = await beforeAbort(run, signal);
+    if (result) return result;
+    incomplete = true;
+    console.warn('Scanner incomplete', { traceId, field, reason: signal.aborted ? 'cancelled' : 'failed' });
+    return {
+      field, displayName, tier: 'YELLOW',
+      rationale: signal.aborted ? 'Check did not complete before cancellation or the scan deadline.' : 'Check could not be completed.',
+      issues: [{ severity: 'warning', message: 'Check incomplete; review this field manually.' }],
+      suggestions: [], evidence: { source: 'ai' },
+    };
+  };
+  const crawl = async (url: string | undefined): Promise<FirecrawlResult | undefined> => {
+    const crawler = options.crawler;
+    if (!url || !crawler || signal.aborted) return undefined;
+    urlsCrawled.push(url);
+    return await beforeAbort(() => crawler.scrape(url, { signal }), signal) ?? undefined;
+  };
+
+  try {
+    // Deterministic findings exist even if every network operation times out.
+    const fieldResults = [scanUrls(input), scanOptOut(input), scanHelpKeywords(input), scanContentFlags(input)];
+    const checks = [
+      check('campaignDescription', 'Campaign Description', () => scanDescription(input, gateway, model)),
+      check('sampleMessages', 'Sample Messages', () => scanSampleMessages(input, gateway, model)),
+      check('messageFlow', 'Opt-In / Consent Flow', () => scanOptIn(input, gateway, model)),
+      check('shaftContent', 'SHAFT Content Check', () => scanShaft(input, gateway, model)),
+      check('affiliateMarketing', 'Affiliate Marketing Check', () => scanAffiliateMarketing(input, gateway, model)),
+    ];
+    if (quickScan) {
+      fieldResults.push(scanPrivacyPolicyQuick(), scanTermsOfServiceQuick());
+    } else {
+      // Consistency uses submitted data only; it need not wait for crawling.
+      // Each policy check starts as soon as its own page arrives.
+      checks.push(
+        check('consistency', 'Cross-Field Consistency', () => scanConsistency(input, gateway, model)),
+        check('privacyPolicy', 'Privacy Policy', async () => scanPrivacyPolicy(input, gateway, await crawl(input.privacyPolicyUrl), model)),
+        check('termsOfService', 'Terms of Service', async () => scanTermsOfService(input, gateway, await crawl(input.termsOfServiceUrl), model)),
+      );
+      // No scanner consumed the old website crawl. Do not spend budget on unused data.
+    }
+    fieldResults.push(...await Promise.all(checks));
+    const deduped = deduplicateFieldResults(fieldResults);
+    const { overallTier, overallSummary, criticalIssues, warnings } = rollupResults(deduped);
+
+    let revisionPack: RevisionPack | undefined;
+    if (!quickScan) {
+      if (model !== MODELS.premium) revisionPack = { status: 'unavailable', reason: 'not_authorized' };
+      else if (signal.aborted) revisionPack = { status: 'unavailable', reason: 'timeout' };
+      else if (incomplete) revisionPack = { status: 'unavailable', reason: 'incomplete_scan' };
+      else revisionPack = await beforeAbort(() => createRevisionPack(input, deduped, gateway, { signal }), signal)
+        ?? { status: 'unavailable', reason: signal.aborted ? 'timeout' : 'generation_failed' };
+    }
+    return {
+      scanId: traceId, timestamp: new Date().toISOString(), rulesVersion: config.RULES_VERSION,
+      overallTier, overallSummary, criticalIssues, warnings, fieldResults: deduped,
+      ...(revisionPack === undefined ? {} : { revisionPack }),
+      metadata: {
+        scanDurationMs: Date.now() - startTime, fieldsAnalyzed: deduped.length, aiModel: model, urlsCrawled,
+        quickScan: quickScan || undefined,
+        // Synthesis failure alone does not make completed field checks partial.
+        partial: incomplete || undefined,
+      },
+    };
+  } finally {
+    clearTimeout(timeout);
+    deadline.abort();
+  }
 }
 
 function deduplicateFieldResults(results: FieldResult[]): FieldResult[] {
   const byField = new Map<string, FieldResult[]>();
-
-  for (const r of results) {
-    const existing = byField.get(r.field) || [];
-    existing.push(r);
-    byField.set(r.field, existing);
+  for (const result of results) {
+    const entries = byField.get(result.field) ?? [];
+    entries.push(result);
+    byField.set(result.field, entries);
   }
-
-  const deduped: FieldResult[] = [];
-  for (const [, entries] of byField) {
-    if (entries.length === 1) {
-      deduped.push(entries[0]);
-      continue;
-    }
-
-    // If deterministic scanner says RED, that wins
-    const deterministicRed = entries.find((e) => e.evidence.source === 'deterministic' && e.tier === 'RED');
-    if (deterministicRed) {
-      deduped.push(deterministicRed);
-      continue;
-    }
-
-    // Otherwise pick the strictest tier
+  return [...byField.values()].map((entries) => {
+    const deterministicRed = entries.find((entry) => entry.evidence.source === 'deterministic' && entry.tier === 'RED');
+    if (deterministicRed) return deterministicRed;
     const tierOrder: ScanTier[] = ['RED', 'YELLOW', 'GREEN'];
-    entries.sort((a, b) => tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier));
-    deduped.push(entries[0]);
-  }
-
-  return deduped;
-}
-
-async function wrapScanner(
-  fn: () => Promise<FieldResult>,
-  field: string,
-  displayName: string
-): Promise<FieldResult> {
-  try {
-    return await fn();
-  } catch (err) {
-    console.error(`Scanner ${field} failed:`, err);
-    return {
-      field,
-      displayName,
-      tier: 'YELLOW',
-      rationale: `Scanner failed: ${err instanceof Error ? err.message : 'unknown error'}`,
-      issues: [{ severity: 'warning', message: 'Scanner encountered an error' }],
-      suggestions: [],
-      evidence: { source: 'ai' },
-    };
-  }
-}
-
-async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
-  if (ms <= 0) return null;
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<null>((resolve) => {
-    timeoutId = setTimeout(() => resolve(null), ms);
+    return entries.sort((a, b) => tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier))[0];
   });
+}
+
+// Own the raced promise and remove listeners on every path. A late result is
+// ignored, not written into the response. Adapter requests receive this signal.
+async function beforeAbort<T>(run: () => Promise<T>, signal: AbortSignal): Promise<T | null> {
+  if (signal.aborted) return null;
+  let onAbort = () => {};
+  const aborted = new Promise<null>((resolve) => { onAbort = () => resolve(null); });
+  signal.addEventListener('abort', onAbort, { once: true });
   try {
-    return await Promise.race([promise, timeout]);
+    return await Promise.race([run(), aborted]);
+  } catch {
+    // Never return/log arbitrary dependency exceptions or campaign text.
+    return null;
   } finally {
-    if (timeoutId !== undefined) clearTimeout(timeoutId);
+    signal.removeEventListener('abort', onAbort);
   }
 }
