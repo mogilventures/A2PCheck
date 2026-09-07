@@ -34,7 +34,7 @@ export type AiModel = (typeof modelPolicies)[number]['model'];
 /** The stable request, including controls required by the selected model. */
 export type AiCompletionRequest = (typeof modelPolicies)[number] & {
   readonly messages: readonly AiMessage[];
-  readonly max_tokens: 1024;
+  readonly max_tokens: 1024 | 4096;
   readonly response_format: { readonly type: 'json_object' } | {
     readonly type: 'json_schema';
     readonly json_schema: {
@@ -50,6 +50,7 @@ export function createAiCompletionRequest(
   messages: readonly AiMessage[],
   model: string,
   schema: ZodSchema = aiResultSchema,
+  options: { readonly maxTokens?: 1024 | 4096 } = {},
 ): AiCompletionRequest | null {
   const policy = modelPolicies.find((candidate) => candidate.model === model);
   if (policy === undefined) return null;
@@ -57,11 +58,11 @@ export function createAiCompletionRequest(
     // Claude's JSON-object mode returned fenced Markdown in the live bake-off.
     // Derive its native constrained output schema from the same runtime parser.
     const { $schema: _dialect, ...jsonSchema } = zodToJsonSchema(schema, { $refStrategy: 'none' });
-    return { ...policy, messages, max_tokens: 1024,
+    return { ...policy, messages, max_tokens: options.maxTokens ?? 1024,
       response_format: { type: 'json_schema', json_schema: { name: 'scan_result', strict: true, schema: jsonSchema } },
     };
   }
-  return { ...policy, messages, max_tokens: 1024, response_format: { type: 'json_object' } };
+  return { ...policy, messages, max_tokens: options.maxTokens ?? 1024, response_format: { type: 'json_object' } };
 }
 
 /** The transport-level provider response consumed by the AI analysis service. */
@@ -73,7 +74,7 @@ export interface AiGatewayResponse {
 
 /** Intentional seam for completing an AI request without moving parsing or retry policy out of production code. */
 export interface AiGateway {
-  complete(request: AiCompletionRequest): Promise<AiGatewayResponse>;
+  complete(request: AiCompletionRequest, options?: { readonly signal?: AbortSignal }): Promise<AiGatewayResponse>;
 }
 
 /** Configuration for the OpenRouter-compatible Cloudflare AI Gateway adapter. */
@@ -114,7 +115,10 @@ export function createOpenRouterAiGateway(
   options: { readonly signal?: AbortSignal } = {},
 ): AiGateway {
   return {
-    async complete(request: AiCompletionRequest): Promise<AiGatewayResponse> {
+    async complete(request: AiCompletionRequest, callOptions = {}): Promise<AiGatewayResponse> {
+      const signals = [options.signal, callOptions.signal].filter((signal): signal is AbortSignal => signal !== undefined);
+      const signal = signals.length ? AbortSignal.any(signals) : undefined;
+      if (signal?.aborted) return { ok: false, status: 408, body: null };
       const response = await fetch(config.url, {
         method: 'POST',
         headers: {
@@ -124,7 +128,7 @@ export function createOpenRouterAiGateway(
           'cf-aig-skip-cache': 'true',
         },
         body: JSON.stringify(request),
-        signal: options.signal,
+        signal,
       });
 
       if (!response.ok) {
@@ -146,14 +150,17 @@ export async function runAiAnalysis<T>(
   messages: readonly AiMessage[],
   schema: ZodSchema<T>,
   model: string = DEFAULT_MODEL,
-  retries = 1
+  retries = 1,
+  options: { readonly signal?: AbortSignal; readonly maxTokens?: 1024 | 4096 } = {},
 ): Promise<T | null> {
-  const request = createAiCompletionRequest(messages, model, schema);
+  const request = createAiCompletionRequest(messages, model, schema, options);
   if (request === null) return null;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await gateway.complete(request);
+      if (options.signal?.aborted) return null;
+      const response = await gateway.complete(request, options);
+      if (options.signal?.aborted) return null;
       if (!response.ok) continue;
 
       const envelope = aiGatewayEnvelopeSchema.safeParse(response.body);

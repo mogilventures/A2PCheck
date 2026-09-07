@@ -36,11 +36,11 @@ export class MeasuredAiGateway implements AiGateway {
   constructor(private readonly gateway: AiGateway, private readonly now: () => number) {}
 
   /** Preserve the production exchange while recording bounded, content-free attempt metadata. */
-  async complete(request: AiCompletionRequest) {
+  async complete(request: AiCompletionRequest, options: { readonly signal?: AbortSignal } = {}) {
       const attemptStarted = this.now();
       let response: AiGatewayResponse;
       try {
-        response = await this.gateway.complete(request);
+        response = await this.gateway.complete(request, options);
       } catch {
         // Never retain provider errors, URLs, headers, or arbitrary exception text.
         response = { ok: false, status: 0, body: null };
@@ -118,7 +118,7 @@ export async function evaluateQuickScan(
 ) {
   const measured = new MeasuredAiGateway(gateway, now);
   const result = await orchestrateScan(campaignInputSchema.parse(request),
-    { RULES_VERSION: 'synthetic-evaluation', FIRECRAWL_API_KEY: '' },
+    { RULES_VERSION: 'synthetic-evaluation' },
     measured, true, 'synthetic-quick-evaluation', model);
   // URL and AI sample-message checks merge into one field during rollup.
   const expectedFields = ['sampleMessages', 'optOutKeywords', 'helpKeywords', 'contentFlags',

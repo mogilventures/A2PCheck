@@ -6,6 +6,7 @@ import { checkRateLimit } from './middleware/rateLimit';
 import { orchestrateScan } from './scanners/index';
 import { createOpenRouterAiGateway, resolveModel } from './services/ai';
 import openapiSpec from '../openapi.yaml';
+import { createFirecrawlCrawler } from './services/firecrawl';
 
 const router = AutoRouter<IRequest, [Env]>();
 
@@ -94,10 +95,13 @@ async function handleScan(request: IRequest, env: Env, quickScan: boolean): Prom
       token: env.CF_AIG_TOKEN,
     });
 
-    const result = await orchestrateScan(parsed.data, env, aiGateway, quickScan, traceId, model);
+    const result = await orchestrateScan(parsed.data, { RULES_VERSION: env.RULES_VERSION }, aiGateway, quickScan, traceId, model, {
+      signal: request.signal,
+      crawler: createFirecrawlCrawler(env.FIRECRAWL_API_KEY),
+    });
     return json(result);
-  } catch (err) {
-    console.error('Scan error:', err);
+  } catch {
+    console.error('Scan failed', { traceId, code: 'INTERNAL_ERROR' });
     return json(
       {
         error: {

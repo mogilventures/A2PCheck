@@ -19,7 +19,11 @@ paths:
       summary: Full campaign scan
       description: |
         Performs a full campaign scan including AI analysis and URL crawling.
-        Takes approximately 15–20 seconds.
+        Shares a 45-second deadline across field checks, crawling and synthesis.
+        Authorized premium Full scans include revisionPack status. Standard or
+        unauthorized Full scans return revisionPack unavailable/not_authorized;
+        they never receive a premium synthesis upgrade. Pack failure preserves
+        the original scan and its authoritative findings.
 
         **Rate limits:** 5 requests/hour, 20 requests/day per IP.
       x-ratelimit:
@@ -65,6 +69,7 @@ paths:
       summary: Quick campaign scan
       description: |
         Performs a quick scan that skips URL crawling. Takes approximately 5–8 seconds.
+        Quick responses never include revisionPack, including with a premium key.
         Fields that depend on URL content (e.g. privacy policy, terms of service)
         will return YELLOW tier placeholders indicating they were not checked.
 
@@ -147,8 +152,10 @@ components:
       description: |
         Selects the AI model used for analysis. Defaults to `standard`
         (`openai/gpt-4o-mini`). `premium` (`anthropic/claude-sonnet-4-6`)
-        uses native JSON-schema output; both selected models use a 1,024-token
-        completion budget and temperature 0.1. Model-specific controls are
+        uses native JSON-schema output; field checks use a 1,024-token completion
+        budget and temperature 0.1. Full premium synthesis uses a 4,096-token
+        budget with no application retry and the same provider controls.
+        Model-specific controls are
         operator-owned, not configurable by API callers.
 
         Inference is pinned to OpenAI for standard and Anthropic for premium,
@@ -304,6 +311,120 @@ components:
             $ref: '#/components/schemas/FieldResult'
         metadata:
           $ref: '#/components/schemas/ScanMetadata'
+        revisionPack:
+          $ref: '#/components/schemas/RevisionPack'
+
+    RevisionPack:
+      anyOf:
+        - type: object
+          properties:
+            status:
+              type: string
+              const: available
+            summary:
+              type: string
+              minLength: 1
+              maxLength: 1200
+            disclaimer:
+              type: string
+              const: This pack improves submission readiness, not a guarantee of TCR or
+                carrier approval. Review every change and re-scan before submission;
+                original findings remain authoritative.
+            actions:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    minLength: 1
+                    maxLength: 64
+                  tier:
+                    type: string
+                    enum: [RED, YELLOW]
+                  instruction:
+                    type: string
+                    minLength: 1
+                    maxLength: 1200
+                  kind:
+                    type: string
+                    enum: [review, provide_information]
+                required: [field, tier, instruction, kind]
+                additionalProperties: false
+              maxItems: 11
+            replacements:
+              type: array
+              items:
+                anyOf:
+                  - type: object
+                    properties:
+                      field:
+                        type: string
+                        const: campaignDescription
+                      value:
+                        type: string
+                        minLength: 1
+                        maxLength: 4096
+                    required: [field, value]
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      field:
+                        type: string
+                        const: messageFlow
+                      value:
+                        type: string
+                        minLength: 1
+                        maxLength: 4096
+                    required: [field, value]
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      field:
+                        type: string
+                        const: sampleMessages
+                      value:
+                        type: array
+                        items:
+                          type: string
+                          minLength: 1
+                          maxLength: 4096
+                        minItems: 2
+                        maxItems: 5
+                    required: [field, value]
+                    additionalProperties: false
+              maxItems: 3
+            residualRisks:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    minLength: 1
+                    maxLength: 64
+                  tier:
+                    type: string
+                    enum: [RED, YELLOW]
+                  rationale:
+                    type: string
+                    minLength: 1
+                    maxLength: 4096
+                required: [field, tier, rationale]
+                additionalProperties: false
+              maxItems: 11
+          required: [status, summary, disclaimer, actions, replacements, residualRisks]
+          additionalProperties: false
+        - type: object
+          properties:
+            status:
+              type: string
+              const: unavailable
+            reason:
+              type: string
+              enum: [not_authorized, timeout, incomplete_scan, generation_failed, input_too_large]
+          required: [status, reason]
+          additionalProperties: false
 
     FieldResult:
       type: object

@@ -21,6 +21,7 @@ npm run dev       # Start Wrangler dev server
 npm run deploy    # Deploy to Cloudflare
 npm test                    # Run all offline Vitest tests
 npm run test:watch
+npm run test:worker         # Offline workerd contract checks; includes a real 45-second deadline
 npm run typecheck           # Production source plus test/evaluation TypeScript
 npm run eval:ai -- --model z-ai/glm-5.3-flash --output /tmp/a2p-evaluation.json # Billable; env required
 npm run fixtures:ai:record  # Billable/networked; sequentially refresh AI replay fixtures
@@ -29,7 +30,7 @@ npm run fixtures:ai:record  # Billable/networked; sequentially refresh AI replay
 ## Key conventions
 
 - **Scanner pattern**: deterministic scanners take `ScanRequest`; AI scanners take the intentional `AiGateway` seam plus a model. Register scanners in `worker/src/scanners/index.ts` via `orchestrateScan()`. Construct the production gateway only at the HTTP composition boundary.
-- **Scan phases**: deterministic scanners run in Phase 1 (synchronous, instant). AI scanners run in Phase 2a (parallel async). Firecrawl-dependent scanners run in Phase 2b.
+- **Scan phases**: deterministic checks run first. Independent AI checks (including consistency) start together; each policy check waits only for its own page. Full premium synthesis follows completed field checks. All operations share one caller-owned 45-second cancellation deadline; see `worker/docs/revision-pack.md`.
 - **Path alias**: `@/` maps to `worker/src/` in the worker package.
 - **TypeScript strict mode**. No linter configured.
 

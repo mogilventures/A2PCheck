@@ -7,8 +7,10 @@
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:worker": "node test/revisionPackRuntime.mjs",
     "fixtures:ai:record": "vite-node test/recordAiFixtures.ts",
     "eval:ai": "vite-node test/evaluateAiModels.ts",
+    "eval:revision-pack": "vite-node test/evaluateRevisionPack.ts",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.test.json"
   },
   "dependencies": {
@@ -22,6 +24,7 @@
     "typescript": "^5.7.3",
     "vite-node": "^3.2.4",
     "vitest": "^3.0.9",
-    "wrangler": "^4.76.0"
+    "wrangler": "^4.76.0",
+    "yaml": "^2.9.0"
   }
 }
