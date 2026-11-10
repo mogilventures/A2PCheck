@@ -1,0 +1,101 @@
+name: Developer entry verification
+
+on:
+  pull_request:
+    paths:
+      - README.md
+      - skills/**
+      - docs/developer-entry-experiment.md
+      - .github/workflows/developer-entry-verification.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    # Documentation/install checks only, on GitHub-hosted runners. No scans or secrets.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Record exact revision and verify snapshot
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          git diff --check
+          cd skills/a2pcheck
+          sha256sum --check ../public-skill.sha256
+      - name: Check references and execute the documented installation
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+          import tempfile
+
+          root = Path.cwd()
+          skill = root / 'skills/a2pcheck'
+          expected = {
+              'SKILL.md', 'references/campaign-schema.md',
+              'references/example-campaign.json', 'references/remediation-workflow.md',
+          }
+
+          def snapshot(directory):
+              return {p.relative_to(directory).as_posix(): p.read_bytes()
+                      for p in directory.rglob('*') if p.is_file()}
+
+          original = snapshot(skill)
+          assert set(original) == expected, 'Unexpected skill files'
+          for relative in expected:
+              path = skill / relative
+              if path.suffix != '.md':
+                  continue
+              for target in re.findall(r'\]\(([^)]+)\)', path.read_text()):
+                  if '://' not in target and not target.startswith('#'):
+                      resolved = (path.parent / target.split('#')[0]).resolve()
+                      assert resolved.is_relative_to(skill.resolve()), target
+                      assert resolved.exists(), target
+          example = json.loads((skill / 'references/example-campaign.json').read_text())
+          assert example['tier'] == 'basic'
+          campaign = example['campaign']
+          assert campaign['campaignDescription'] and campaign['messageFlow']
+          assert 2 <= len(campaign['sampleMessages']) <= 5
+          assert all(campaign['sampleMessages'])
+          print('PASS four-file snapshot, relative references, synthetic Basic example shape')
+
+          readme = (root / 'skills/README.md').read_text()
+          section = readme.split('<!-- install-from-clone:start -->', 1)[1].split(
+              '<!-- install-from-clone:end -->', 1)[0]
+          command = re.search(r'```sh\n(.*?)\n```', section, re.S).group(1)
+          with tempfile.TemporaryDirectory() as directory:
+              home = Path(directory)
+              env = dict(os.environ, HOME=str(home))
+              env.pop('SKILL_DIR', None)
+              for name, custom in [('generic', None), ('claude', home / '.claude/skills/a2pcheck')]:
+                  local_env = dict(env)
+                  if custom is not None:
+                      local_env['SKILL_DIR'] = str(custom)
+                  destination = custom if custom is not None else home / '.agents/skills/a2pcheck'
+                  subprocess.run(['sh', '-c', command], env=local_env, check=True)
+                  assert snapshot(destination) == original, name
+                  repeated = subprocess.run(['sh', '-c', command], env=local_env, capture_output=True)
+                  assert repeated.returncode != 0, 'Existing installation was not refused'
+                  assert b'destination already exists' in repeated.stderr
+                  assert snapshot(destination) == original, 'Existing installation changed'
+                  print('PASS', name, 'install and existing-install refusal')
+              link = home / 'broken-skill-link'
+              link.symlink_to(home / 'missing-target', target_is_directory=True)
+              refused = subprocess.run(['sh', '-c', command], env=dict(env, SKILL_DIR=str(link)), capture_output=True)
+              assert refused.returncode != 0 and link.is_symlink()
+              assert b'destination already exists' in refused.stderr
+              assert not (home / 'missing-target').exists()
+              print('PASS broken-symlink destination refused')
+          print('PASS no scan API, account, credit, or production-service operations performed')
+          PY
