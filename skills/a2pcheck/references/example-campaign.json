@@ -1,0 +1,24 @@
+{
+  "tier": "basic",
+  "campaign": {
+    "useCaseType": "MARKETING",
+    "businessName": "Acme Coffee Co.",
+    "campaignDescription": "Acme Coffee Co. sends weekly promotional offers and new-product announcements to customers who opt in at checkout or on our website. Messages link to acme.example.com and always include opt-out instructions.",
+    "sampleMessages": [
+      "Acme Coffee: 20% off all beans this week. Shop acme.example.com/sale. Msg&data rates may apply. Reply STOP to opt out, HELP for help.",
+      "Acme Coffee: New single-origin just dropped. Browse acme.example.com/new. Reply STOP to unsubscribe."
+    ],
+    "messageFlow": "Customers opt in by checking an unchecked SMS-consent box at checkout on acme.example.com or by texting START to our number. Consent is not a condition of purchase.",
+    "privacyPolicyUrl": "https://acme.example.com/privacy",
+    "websiteUrl": "https://acme.example.com",
+    "termsOfServiceUrl": "https://acme.example.com/terms",
+    "optInKeywords": ["START"],
+    "optOutKeywords": ["STOP"],
+    "helpKeywords": ["HELP"],
+    "optInMessage": "Acme Coffee: You're subscribed to weekly offers. Reply STOP to opt out, HELP for help. Msg&data rates may apply.",
+    "optOutMessage": "Acme Coffee: You're unsubscribed and won't receive more messages. Reply START to rejoin.",
+    "helpMessage": "Acme Coffee: For help, email support@acme.example.com. Reply STOP to opt out.",
+    "embeddedLinks": true,
+    "embeddedPhoneNumbers": false
+  }
+}

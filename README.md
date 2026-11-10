@@ -1,8 +1,20 @@
 # A2PCheck
 
-Pre-scan your A2P 10DLC campaign registration data against Twilio's compliance rules before you submit — catch rejections before they happen.
+Review your A2P 10DLC campaign draft before submitting it to your messaging provider. Get field-level readiness findings and suggested fixes—not registration or an approval guarantee.
 
-**Live at [a2pcheck.com](https://a2pcheck.com)**
+## Try the hosted scanner
+
+**[Run a free Basic check](https://www.a2pcheck.com/10dlc-check?utm_source=github&utm_medium=referral&utm_campaign=developer_precheck)** — no account required, within usage limits. Bring your campaign description, at least two representative sample messages, and your opt-in/consent flow. Do not include real subscriber data or credentials.
+
+Basic reviews the details you paste without fetching URL contents. Full also fetches and analyzes your privacy policy and terms pages and adds a dedicated cross-field consistency check. Neither tier fetches your business website, checks registration status, sends test SMS, or guarantees approval. Signed-in Basic and Full scans use credits; see [pricing](https://www.a2pcheck.com/pricing).
+
+## Use A2PCheck with a coding agent
+
+The [public A2PCheck skill](skills/a2pcheck/SKILL.md) helps an agent check a campaign draft and present findings for human review. [Install the reviewed skill folder](skills/README.md), or use the [hosted agent guide](https://www.a2pcheck.com/agents) for API examples and HTTP downloads.
+
+Installation does not run a scan or create an account. The skill defaults to an anonymous Basic request; authenticated Basic costs one credit and Full costs two. Paid calls require explicit approval. It does not submit campaigns to providers.
+
+Want to run the engine yourself? Jump to [self-hosting](#self-host-the-worker).
 
 ## What it does
 
@@ -12,7 +24,7 @@ A2PCheck analyzes your 10DLC campaign fields (description, sample messages, opt-
 
 | Scanner | Type | What it checks |
 |---|---|---|
-| URLs | Deterministic | URL shorteners, missing URLs, unreachable links |
+| URLs | Deterministic | URL shorteners in sample messages |
 | Opt-Out Keywords | Deterministic | STOP keyword presence (CTIA requirement) |
 | HELP Keywords | Deterministic | HELP keyword presence |
 | Content Flags | Deterministic | SHAFT content (sex, hate, alcohol, firearms, tobacco) |
@@ -39,7 +51,7 @@ Cloudflare Worker API
 
 The frontend at [a2pcheck.com](https://a2pcheck.com) is a separate Next.js app that calls this API.
 
-## Quick start
+## Self-host the worker
 
 ### Prerequisites
 
