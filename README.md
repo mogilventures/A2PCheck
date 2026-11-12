@@ -37,6 +37,8 @@ A2PCheck analyzes your 10DLC campaign fields (description, sample messages, opt-
 | Terms of Service | AI + Crawl | Messaging terms in ToS |
 | Cross-Field Consistency | AI | Description vs. sample messages vs. use case alignment |
 
+Before resubmitting a campaign, use the [resubmission checklist](docs/10dlc-resubmission-checklist.md) to compare the description, samples, consent evidence, and supporting pages. It includes a clearly synthetic worked example and links to current Twilio guidance; using the scanner is optional.
+
 ## Architecture
 
 This repo is the OSS scanner engine — a Cloudflare Worker that exposes the scan API.
